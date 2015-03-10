@@ -1,0 +1,580 @@
+<html>
+
+<head>
+<title>lesson 4 3d objects</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<!-- sheet to make the canvas fullscreen -->
+<link rel="stylesheet" type="text/css" href="index.css">
+
+<!-- necessary matrices for rendering with webgl -->
+<script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+
+<!-- necessary to use requestAnimeFrame -->
+<script type="text/javascript" src="webgl-utils.js"></script>
+
+
+
+<!-- The next 2 scripts are written in GLSL -->
+
+<!-- specify the precision for the fragment shader-->
+<script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying vec4 vColor;
+
+    void main(void) 
+    {
+        gl_FragColor = vColor;
+    }
+</script>
+
+<!-- specify the precision for the shaders-->
+<script id="shader-vs" type="x-shader/x-vertex">
+
+    attribute vec3 aVertexPosition;
+    attribute vec4 aVertexColor;
+
+    // declare the uniform variables and set them
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+
+    // declare the color attribute for the vertex shader
+    varying vec4 vColor;
+
+    // multiply the initial vertex position by the model view and 
+    // projection matrices in order to get the final vertex position
+    // and pass the color through
+    void main(void) 
+    {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vColor = aVertexColor;
+    }
+</script>
+
+<script type="text/javascript">
+
+/*********************************************************************
+* function to initialize webGL
+*********************************************************************/
+var gl;
+function initGL(canvas) 
+{
+    try 
+    {
+        // get the core webgl context
+        gl = canvas.getContext("experimental-webgl");
+
+        // set the width and height of the canvas
+        gl.viewportWidth = canvas.width;
+        gl.viewportHeight = canvas.height;
+    } 
+    // catch an exception and do nothing with it
+    catch (e) {}
+    // print error message
+    if (!gl) 
+    {
+        alert("Could not initialise WebGL, sorry :-(");
+    }
+}
+
+
+function getShader(gl, id) 
+{
+    // get the shader script whether it be fragment or vertex
+    var shaderScript = document.getElementById(id);
+    if (!shaderScript) 
+    {
+        return null;
+    }
+
+    //
+    var str = "";
+    var k = shaderScript.firstChild;
+
+    //
+    while (k) {
+        if (k.nodeType == 3) 
+        {
+            str += k.textContent;
+        }
+        k = k.nextSibling;
+    }
+
+    //
+    var shader;
+
+    //
+    if (shaderScript.type == "x-shader/x-fragment") 
+    {
+        shader = gl.createShader(gl.FRAGMENT_SHADER);
+    } 
+    else if (shaderScript.type == "x-shader/x-vertex") 
+    {
+        shader = gl.createShader(gl.VERTEX_SHADER);
+    } 
+    else 
+    {
+        return null;
+    }
+
+    //
+    gl.shaderSource(shader, str);
+    gl.compileShader(shader);
+
+    //
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) 
+    {
+        alert(gl.getShaderInfoLog(shader));
+        return null;
+    }
+
+    return shader;
+}
+
+/*********************************************************************
+* function to initialize the shader program to use
+*********************************************************************/
+var shaderProgram;
+function initShaders() 
+{
+    // initialize the fragment and vertex shaders
+    var fragmentShader = getShader(gl, "shader-fs");
+    var vertexShader = getShader(gl, "shader-vs");
+
+    // attach the shaders to the shader program
+    shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+
+    // print error if it does not work
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) 
+    {
+        alert("Could not initialise shaders");
+    }
+
+    // this asks webgl to use the shader program we have just initialized
+    gl.useProgram(shaderProgram);
+
+    // give the shader program a reference to the vertex position
+    shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+    gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+    // give the shader program the color
+    shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
+    gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
+
+    // give the shader program the locations of the uniform variables
+    shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+    shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+}
+
+// create the mvp matrices with the mat4 library and the matrix
+// stack for relative animation of objects
+var mvMatrix = mat4.create();
+var mvMatrixStack = [];
+var pMatrix = mat4.create();
+
+/*********************************************************************
+* this is a function to push a matrix onto the matrix stack for 
+* animation
+*********************************************************************/
+function mvPushMatrix() 
+{
+    var copy = mat4.create();
+    mat4.set(mvMatrix, copy);
+    mvMatrixStack.push(copy);
+}
+
+/*********************************************************************
+* this is a function to pop a matrix off of the matrix stack for 
+* animation
+*********************************************************************/
+function mvPopMatrix() 
+{
+    if (mvMatrixStack.length == 0) 
+    {
+        throw "Invalid popMatrix!";
+    }
+    mvMatrix = mvMatrixStack.pop();
+}
+
+function setMatrixUniforms() {
+    gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+    gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+}
+
+// global buffers
+var pyramidVetexPositionBuffer;
+var pyramidVertexColorBuffer;
+var cubeVertexPositionBuffer;
+var cubeVertexColorBuffer;
+var cubeVertexIndexBuffer;
+
+/*********************************************************************
+* this is a function to initialise the buffers that are to be rendered
+*********************************************************************/
+function initBuffers() 
+{
+////////////////////////setup the pyramid//////////////////////////
+    pyramidVetexPositionBuffer = gl.createBuffer();
+
+    // bind the buffer for the pyramid
+    gl.bindBuffer(gl.ARRAY_BUFFER, pyramidVetexPositionBuffer);
+
+    // initial starting point of our pyramid
+    var vertices = 
+    [
+        // front face
+         0.0,  1.0,  0.0, // top vertex
+        -1.0, -1.0,  1.0, // bottom left vertex
+         1.0, -1.0,  1.0, // bottom right vertex
+
+        // right face
+         0.0,  1.0,  0.0, // top vertex
+         1.0, -1.0,  1.0, // bottom left vertex
+         1.0, -1.0, -1.0, // bottom right vertex
+
+        // left face
+         0.0,  1.0,  0.0, // top vertex
+        -1.0, -1.0, -1.0, // bottom left vertex
+        -1.0, -1.0,  1.0, // bottom right vertex
+
+        // back face
+         0.0,  1.0,  0.0, // top vertex
+         1.0, -1.0, -1.0, // bottom left vertex
+        -1.0, -1.0, -1.0  // bottom right vertex      
+
+    ];
+    
+    // get the vertices ready to pass to webGL to fill its buffers
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+    // specify the the 32 value array has 12 vertices
+    // and each vertex has 3 elements
+    pyramidVetexPositionBuffer.itemSize = 3;
+    pyramidVetexPositionBuffer.numItems = 12;
+
+    pyramidVertexColorBuffer = gl.createBuffer();
+
+    // bind the color buffer for the pyramid
+    gl.bindBuffer(gl.ARRAY_BUFFER, pyramidVertexColorBuffer);
+
+    // this array operates off of each specific vertex 
+    // the 4 values are [red, green, blue, alpha]
+    // alpha is a measure of opaqueness
+    var colors = 
+    [
+        [1.0, 0.0, 0.0, 1.0], // Front face
+        [1.0, 0.0, 1.0, 1.0], // Right face
+        [0.0, 0.0, 1.0, 1.0], // Left face
+        [1.0, 1.0, 0.0, 1.0]  // Back face
+    ];
+
+    var unpackedColors = [];
+    for (var i in colors) 
+    {
+        var color = colors[i];
+        for (var j=0; j < 3; j++) 
+        {
+            unpackedColors = unpackedColors.concat(color);
+        }
+    }
+    // get the vertices ready to pass to webGL to fill its buffers
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(unpackedColors), gl.STATIC_DRAW);
+
+    // specify the the 32 value array has 12 vertices
+    // and each vertex has 4 values
+    pyramidVertexColorBuffer.itemSize = 4;
+    pyramidVertexColorBuffer.numItems = 12;
+
+//////////////////////setup the cube/////////////////////////////
+
+    // create the buffer
+    cubeVertexPositionBuffer = gl.createBuffer();
+
+    // bind the buffer for the cube
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
+    
+    // intial starting point of our cube
+    vertices = 
+    [
+        // front face
+         1.0,  1.0,  1.0, // top right vertex
+        -1.0,  1.0,  1.0, // top left vertex
+         1.0, -1.0,  1.0, // bottom right vertex
+        -1.0, -1.0,  1.0, // bottom left vertex
+
+        // back face
+         1.0,  1.0, -1.0, // top right vertex
+        -1.0,  1.0, -1.0, // top left vertex
+         1.0, -1.0, -1.0, // bottom right vertex
+        -1.0, -1.0, -1.0, // bottom left vertex
+
+        // top face
+         1.0,  1.0,  1.0, // front right vertex
+        -1.0,  1.0,  1.0, // front left vertex
+         1.0,  1.0, -1.0, // back right vertex
+        -1.0,  1.0, -1.0, // back left vertex
+
+        // bottom face
+         1.0, -1.0,  1.0, // front right vertex
+        -1.0, -1.0,  1.0, // front left vertex
+         1.0, -1.0, -1.0, // back right vertex
+        -1.0, -1.0, -1.0, // back left vertex
+
+        // right face
+         1.0,  1.0,  1.0, // top front vertex
+         1.0, -1.0,  1.0, // bottom front vertex
+         1.0,  1.0, -1.0, // top back vertex
+         1.0, -1.0, -1.0, // bottom back vertex
+
+        // left face
+        -1.0,  1.0,  1.0, // top front vertex
+        -1.0, -1.0,  1.0, // bottom front vertex
+        -1.0,  1.0, -1.0, // top back vertex
+        -1.0, -1.0, -1.0  // bottom back vertex    
+    ];
+
+    // get the vertices ready to pass to webGL to fill its buffers
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+    // specify the the 9 value array has 3 vertices and each vertex has 4 elements
+    cubeVertexPositionBuffer.itemSize = 3;
+    cubeVertexPositionBuffer.numItems = 4;
+
+    cubeVertexColorBuffer = gl.createBuffer();
+
+    // bind the color buffer for the pyramid
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexColorBuffer);
+
+    // this array operates off of each specific vertex 
+    // the 4 values are [red, green, blue, alpha]
+    // alpa is a measure of opaqueness
+    colors = 
+    [
+        [1.0, 0.0, 0.0, 1.0], // Front face
+        [1.0, 1.0, 0.0, 1.0], // Back face
+        [0.0, 1.0, 0.0, 1.0], // Top face
+        [1.0, 0.5, 0.5, 1.0], // Bottom face
+        [1.0, 0.0, 1.0, 1.0], // Right face purple
+        [0.0, 0.0, 1.0, 1.0]  // Left face
+    ];
+
+    // loop to unpack the color arrays
+    var unpackedColors = [];
+    for (var i in colors) 
+    {
+        var color = colors[i];
+        for (var j=0; j < 4; j++) 
+        {
+            unpackedColors = unpackedColors.concat(color);
+        }
+    }
+
+    // get the vertices ready to pass to webGL to fill its buffers
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(unpackedColors), gl.STATIC_DRAW);
+
+    // specify the the 96 value array has 24 vertices and each vertex has 4 values
+    cubeVertexColorBuffer.itemSize = 4;
+    cubeVertexColorBuffer.numItems = 24;
+
+    // specify the element array buffer for the cube
+    // since we are drawing it using triangles
+    cubeVertexIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
+    var cubeVertexIndices = [
+        0, 1, 2,      1, 2, 3,    // Front face
+        4, 5, 6,      5, 6, 7,    // Back face
+        8, 9, 10,     9, 10, 11,  // Top face
+        12, 13, 14,   13, 14, 15, // Bottom face
+        16, 17, 18,   17, 18, 19, // Right face
+        20, 21, 22,   21, 22, 23  // Left face
+    ];
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+    cubeVertexIndexBuffer.itemSize = 1;
+    cubeVertexIndexBuffer.numItems = 36;
+}
+
+/*********************************************************************
+* function to convert radians to degrees
+*********************************************************************/
+function degToRad(degrees) 
+{
+    return degrees * Math.PI / 180;
+}
+
+// variables to keep track of the rotation of the objects
+var rPyramid = 0;
+var rCube = 0;
+
+var rdirection = 0;
+/*********************************************************************
+* this is a function to draw the scene on the canvas
+*********************************************************************/
+function drawScene() 
+{
+    // set the size of the canvas before drawing
+    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+
+    // set up the orthographic projection for our view
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // set up the perspectibe before drawing
+    mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+
+    // start with the identity matrix
+    mat4.identity(mvMatrix);
+
+/////////////////////////////////draw the pyramid////////////////////////
+
+    // move the pyramid 7 units forward and 1.5 units to the left
+    mat4.translate(mvMatrix, [-1.5, 0.0, -7.0]);
+
+    // puts a model view matrix onto the stack in order to change 
+    // things position relative to each other until pop matrix
+    mvPushMatrix();
+
+    // rotate to the right 1 degree around the verticle axis
+    mat4.rotate(mvMatrix, degToRad(rPyramid), [0, rdirection, 0]);
+
+    // use the pyramid buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, pyramidVetexPositionBuffer);
+
+    // give the positions to opengl of the vertices
+    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, pyramidVetexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    // use the pyramid color buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, pyramidVertexColorBuffer);
+
+    // give the color of the vertices to opengl
+    gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, pyramidVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    // tell webgl to take into account the MVP matrices
+    setMatrixUniforms();
+
+    // draw the pyramid
+    gl.drawArrays(gl.TRIANGLES, 0, pyramidVetexPositionBuffer.numItems);
+
+    // pops the relative matrix off of the stack
+    mvPopMatrix();
+
+//////////////////////////draw the cube/////////////////////////////////
+
+    // move the cube 3 units to the right of the position of the pyramid
+    mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
+
+    // puts a model view matrix onto the stack in order to change 
+    // things position relative to each other until pop matrix
+    mvPushMatrix();
+
+    // rotate to the right 1 degree around the horizontal or x axis
+    mat4.rotate(mvMatrix, degToRad(rCube), [1, 1, 0]);
+
+    // use the cube buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
+
+    // give the positions to opengl of the vertices
+    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    // use the cube color buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexColorBuffer);
+
+    // give the color of the vertices to opengl
+    gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, cubeVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    // make the cubes element array the current array
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
+
+    // tell webgl to take into account the MVP matrices
+    setMatrixUniforms();
+
+    // draw the cube
+    gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0)
+
+    // pops the relative matrix off of the stack
+    mvPopMatrix();
+}
+
+var lastTime = 0;
+
+/*********************************************************************
+* this is a function to animate the objects by changing the rotation
+* angles as time elapses
+*********************************************************************/
+function animate() 
+{
+    // get current time
+    var timeNow = new Date().getTime();
+
+    if (lastTime != 0) 
+    {
+        // calulates how much time has elapsed
+        var elapsed = timeNow - lastTime;
+
+        // change the rotation variables as time passes
+        // pyramid rotation = 90 degrees per second
+        // cube rotation = 75 degrees per second
+        rPyramid += (90 * elapsed) / 1000.0;
+        rCube += (75 * elapsed) / 1000.0;
+    }
+
+    // change to the new last time
+    lastTime = timeNow;
+}
+
+/*********************************************************************
+* this is a function to animate the scene by drawing the scene again
+* and again
+*********************************************************************/
+function tick() 
+{
+    // calls this function at the screen refresh rate
+    requestAnimFrame(tick); 
+
+    // draws the scene
+    drawScene();
+
+    animate();
+}
+
+/*********************************************************************
+* this is a function to run the program
+*********************************************************************/
+function webGLStart() 
+{
+    var canvas = document.getElementById("tank-canvas");
+    initGL(canvas);
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initShaders();
+    initBuffers();
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.DEPTH_TEST);
+    tick(); // changed when animation was added
+}
+
+document.addEventListener('keydown', function(event) {
+    if(event.keyCode == 37) {
+        rdirection = -1;
+        event.keyCode = 0;
+    }
+    else if(event.keyCode == 39) {
+        rdirection = 1;
+        event.keyCode = 0;
+
+    }
+    else
+    {
+        rdirection = 0;
+    }
+});
+
+    </script>
+    <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+</head>
+<body onload="webGLStart();">
+    <canvas id="tank-canvas" style="border: none;" ></canvas>
+</body>
+
+</html>
