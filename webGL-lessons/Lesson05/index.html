@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>OpenGL Lesson 5 - Textures</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+
+        <style type="text/css">
+        body {
+            margin: 0px auto;
+            background-color:rgb(0,0,0);
+            color:rgb(255,255,255);
+            text-align:center;
+            border: 0;
+            overflow: hidden; /*  Disable scrollbars */
+            display: block;  /* No floating content on sides */
+        }
+        canvas {
+            position:absolute;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            z-index:-1;
+        }
+        </style>
+
+        <!-- Define the shaders -->
+        <script id="texture_v" type="VertexShader">
+            // set the precision
+            precision mediump float;
+
+            // declare the matrices needed
+            attribute vec3 vertex;
+            attribute vec2 uv;
+            varying vec2 vUV;
+            uniform mat4 mvp;
+
+            void main()
+            {
+                gl_Position = mvp * vec4(vertex, 1.0);
+                vUV = uv;
+            }
+        </script>
+        <script id="texture_f" type="FragmentShader">
+            // set the precision
+            precision mediump float;
+
+            varying vec2 vUV;
+            uniform sampler2D sampler;
+            void main()
+            {
+                gl_FragColor = texture2D(sampler, vUV);
+            }
+        </script>
+
+        <!-- code in other files -->
+        <script type="text/javascript" src="renderer.js"></script>
+        <script type="text/javascript" src="matrix.js"></script>
+        <script type="text/javascript" src="helpers.js"></script>
+
+        <!-- code to be put in the index.html -->
+        <script type="text/javascript">
+            function main() {
+                // get the canvas to use
+                var canvas = document.getElementById("canvas");
+
+                // get the conext to use with the canvas
+                var gl = canvas.getContext("experimental-webgl");
+                if (!gl) {
+                    alert("You're browser does not support WebGL");
+                    return;
+                }
+
+                // make the canvas fullscreen
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+
+                // call the render function to render objects within the canvas
+                var renderer = new Renderer(canvas, gl);
+                window.onresize = function() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    renderer.reshape(canvas.width, canvas.height);
+                };
+
+                // this is needed for animation
+                var renderLoop = function() {
+                    renderer.update();
+                    renderer.draw(gl);
+                };
+
+                // animate the frame
+                var animFrame = (window.requestAnimationFrame    || window.webkitRequestAnimationFrame ||
+                                 window.mozRequestAnimationFrame || window.oRequestAnimationFrame      ||
+                                 window.msRequestAnimationFrame  || null);
+                if (animFrame !== null) {
+                    var recursiveAnim = function() {
+                        renderLoop();
+                        animFrame(recursiveAnim, canvas);
+                    };
+                    animFrame(recursiveAnim, canvas);
+                }
+                else setInterval(renderLoop, 1000.0 / 60.0);
+            }
+        </script>
+    </head>
+
+    <body onload="main()">
+        <canvas id="canvas"></canvas>
+    </body>
+</html>
+
