@@ -85,7 +85,7 @@
 
                 // this is needed for animation
                 var renderLoop = function() {
-                    renderer.update();
+                    renderer.update(x, y);
                     renderer.draw(gl);
                 };
 
@@ -101,6 +101,50 @@
                     animFrame(recursiveAnim, canvas);
                 }
                 else setInterval(renderLoop, 1000.0 / 60.0);
+
+
+                var currentlyPressedKeys = {};
+
+                function handleKeyDown(event) {
+                    currentlyPressedKeys[event.keyCode] = true;
+                }
+
+                function handleKeyUp(event) {
+                    currentlyPressedKeys[event.keyCode] = false;
+                }
+
+                var x = 0;
+                var y = 0;
+
+                // handle the rotation by keypress
+                if (currentlyPressedKeys[65]) {
+                    // a
+                    y = -.75;
+                }
+                else {
+                    y = 0;
+                }
+                if (currentlyPressedKeys[68]) {
+                    // a
+                    y = .75;
+                }
+                else {
+                    y = 0;
+                }
+                if (currentlyPressedKeys[87]) {
+                    // a
+                    x = .75;
+                }
+                else {
+                    x = 0;
+                }
+                if (currentlyPressedKeys[83]) {
+                    // a
+                    x = -.75;
+                }
+                else {
+                    x = 0;
+                }
             }
         </script>
     </head>
