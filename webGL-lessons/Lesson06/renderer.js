@@ -126,10 +126,10 @@ Renderer.prototype.update = function() {
         this.tank1.rotationY -= 1;
     }
     if (currentlyPressedKeys[38]) {
-        this.tank1.rotationX -= 1;
+        this.tank1.rotationX += 1;
     }
     if (currentlyPressedKeys[40]) {
-        this.tank1.rotationX += 1;
+        this.tank1.rotationX -= 1;
     }
 
    // this.objectRotation += .25;

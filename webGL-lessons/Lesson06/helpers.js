@@ -161,3 +161,13 @@ function parseOBJ(lines, vertices, uvs, normals) {
         normals.push(norm.z);
     }
 }
+
+var currentlyPressedKeys = {};
+
+function handleKeyDown(event) {
+  currentlyPressedKeys[event.keyCode] = true;
+}
+
+function handleKeyUp(event) {
+  currentlyPressedKeys[event.keyCode] = false;
+}
