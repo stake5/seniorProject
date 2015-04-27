@@ -2,7 +2,7 @@
 <html>
 
 <head>
-<title>OpenGL Lesson 7 - lighting</title>
+<title>OpenGL Lesson 8 - Depth Buffer, Transparency, and Blending</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript">
@@ -21,12 +21,14 @@ try{if (!window.CloudFlare) {var CloudFlare=[{verbose:0,p:0,byc:0,owlid:"cf",bag
     varying vec2 vTextureCoord;
     varying vec3 vLightWeighting; // a 3 element vector that changes
 
+    uniform float uAlpha; // set alpha value to be used in this shader
+
     uniform sampler2D uSampler;
 
     void main(void) {
         vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
         // extract the red green blue lighting for the shader
-        gl_FragColor = vec4(textureColor.rgb * vLightWeighting, textureColor.a);
+        gl_FragColor = vec4(textureColor.rgb * vLightWeighting, textureColor.a * uAlpha);
     }
 </script>
 
@@ -163,6 +165,8 @@ try{if (!window.CloudFlare) {var CloudFlare=[{verbose:0,p:0,byc:0,owlid:"cf",bag
         shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
         shaderProgram.lightingDirectionUniform = gl.getUniformLocation(shaderProgram, "uLightingDirection");
         shaderProgram.directionalColorUniform = gl.getUniformLocation(shaderProgram, "uDirectionalColor");
+        // dont for get to add this so webgl knows how to use the alpha uniform
+        shaderProgram.alphaUniform = gl.getUniformLocation(shaderProgram, "uAlpha");
     }
 
 
@@ -180,23 +184,23 @@ try{if (!window.CloudFlare) {var CloudFlare=[{verbose:0,p:0,byc:0,owlid:"cf",bag
     }
 
     // variable to hold the image for the texture
-    var crateTexture;
+    var glassTexture;
 
     // initialize the texture with the image stored in the variable
     function initTexture() {
         // initialize the crate texture
-        crateTexture = gl.createTexture();
+        glassTexture = gl.createTexture();
 
         // give the object an image container
-        crateTexture.image = new Image();
+        glassTexture.image = new Image();
 
         // put the texture on the surface needed
-        crateTexture.image.onload = function () {
-            handleLoadedTexture(crateTexture)
+        glassTexture.image.onload = function () {
+            handleLoadedTexture(glassTexture)
         }
 
         // put the image to use in the texture
-        crateTexture.image.src = "crate.gif";
+        glassTexture.image.src = "glass.gif";
     }
 
     // add a matrix stack in order to push and pop relative movement
@@ -464,17 +468,42 @@ try{if (!window.CloudFlare) {var CloudFlare=[{verbose:0,p:0,byc:0,owlid:"cf",bag
         gl.activeTexture(gl.TEXTURE0);
 
         // bind the proper texture to the cube
-        gl.bindTexture(gl.TEXTURE_2D, crateTexture);
+        gl.bindTexture(gl.TEXTURE_2D, glassTexture);
         gl.uniform1i(shaderProgram.samplerUniform, 0);
+
+
+        // find out if blending is checked
+        var blending = document.getElementById("blending").checked;
+
+        // if blending is checked set the function that will be used to combine 2 fragments
+        if (blending) 
+        {
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE); // args = source frag, dest frag
+            // source is the frag were drawing right now
+            // destination is the frage that has already been drawn
+
+            gl.enable(gl.BLEND); // turn on blending
+            gl.disable(gl.DEPTH_TEST); // turn off depth testing: in some cases depth testing will discard things before blending can be calculated and rendered
+
+            // load alpha value to see how it can adjust images
+            gl.uniform1f(shaderProgram.alphaUniform, parseFloat(document.getElementById("alpha").value));
+        }
+        else
+        {
+            // reset blender and depth test
+            gl.disable(gl.BLEND);
+            gl.enable(gl.DEPTH_TEST);
+        }
+
 
         // find out if lighting is checked
         var lighting = document.getElementById("lighting").checked;
 
-
         gl.uniform1i(shaderProgram.useLightingUniform, lighting);
         
         // if lighting is checked
-        if (lighting) {
+        if (lighting) 
+        {
             // add the input for red green and blue ambient light to the uniform matrix
             gl.uniform3f(
                 shaderProgram.ambientColorUniform,
@@ -547,7 +576,7 @@ try{if (!window.CloudFlare) {var CloudFlare=[{verbose:0,p:0,byc:0,owlid:"cf",bag
         initTexture();
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.enable(gl.DEPTH_TEST);
+        gl.enable(gl.DEPTH_TEST); // pay attention to depth
 
         document.onkeydown = handleKeyDown;
         document.onkeyup = handleKeyUp;
@@ -565,8 +594,12 @@ try{if (!window.CloudFlare) {var CloudFlare=[{verbose:0,p:0,byc:0,owlid:"cf",bag
     <canvas id="lesson07-canvas" style="border: none;" width="500" height="500"></canvas>
 
     <br />
+    <input type="checkbox" id="blending" checked /> Use blending<br/>
+    Alpha level <input type="text" id="alpha" value="0.5" /><br/>
+
+    <br />
     <input type="checkbox" id="lighting" checked /> Use lighting<br/>
-    (Use cursor keys to spin the box and <code>Page Up</code>/<code>Page Down</code> to zoom out/in)
+    (Use w,a,s,d keys to spin the box and <code>Page Up</code>/<code>Page Down</code> to zoom out/in)
 
     <br/>
     <h2>Directional light:</h2>
