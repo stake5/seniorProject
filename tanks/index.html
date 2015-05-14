@@ -1,7 +1,7 @@
 <html>
 
 <head>
-<title>Learning WebGL &mdash; lesson 5</title>
+<title>Tanks!</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
         <style type="text/css">
@@ -24,10 +24,13 @@
         }
         </style>
 
-<script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
-<script type="text/javascript" src="webgl-utils.js"></script>
-<script type="text/javascript" src="keys.js"></script>
-<script type="text/javascript" src="terrain.js"></script>
+<script type="text/javascript" src="utils/glMatrix-0.9.5.min.js"></script>
+<script type="text/javascript" src="utils/webgl-utils.js"></script>
+<script type="text/javascript" src="helpers/keys.js"></script>
+<script type="text/javascript" src="helpers/animation.js"></script>
+<script type="text/javascript" src="objects/terrain.js"></script>
+<script type="text/javascript" src="objects/skybox.js"></script>
+<script type="text/javascript" src="helpers/render.js"></script>
 
 <script id="shader-fs" type="x-shader/x-fragment">
     precision mediump float;
@@ -139,39 +142,6 @@
         shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
     }
 
-
-    function handleLoadedTexture(texture) 
-    {
-
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
-        // gl.generateMipmap(gl.TEXTURE_2D);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.bindTexture(gl.TEXTURE_2D, null);
-
-
-    }
-
-
-    var grassTexture;
-
-    function initTexture() {
-        grassTexture = gl.createTexture();
-        grassTexture.image = new Image();
-        grassTexture.image.onload = function () {
-            handleLoadedTexture(grassTexture)
-        }
-
-        grassTexture.image.src = "grassTexture.jpeg";
-    }
-
-
     var mvMatrix = mat4.create();
     var mvMatrixStack = [];
     var pMatrix = mat4.create();
@@ -200,65 +170,36 @@
         return degrees * Math.PI / 180;
     }
 
-    var cubeVertexPositionBuffer;
-    var cubeVertexTextureCoordBuffer;
-    var cubeVertexIndexBuffer;
+    // this is to be a container for all of the objects contained within the scene
+    var objects = {
+        map : new terrain(0.0, 0.0, -5, "assets/grassTexture.jpeg"),
+        sky : new skybox(0.0, 0.0, -5, "assets/glass.gif")
+    };
 
     function initBuffers() 
     {
-    	terrain();
+        objects.sky.init();
+        objects.map.init(30, 10);
     }
 
+    function initTextures() 
+    {
+        initTexture(objects.map);
+        initTexture(objects.sky);
+    }
 
-    var xRot = 0;
-    var yRot = 0;
-
-    function drawScene() {
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
-
-        mat4.identity(mvMatrix);
-
-        mat4.translate(mvMatrix, [0.0, 0.0, -5]);
-
-        mat4.rotate(mvMatrix, degToRad(xRot), [1, 0, 0]);
-        //mat4.translate(mvMatrix, 0.0, 0.0, xRot);
-        mat4.rotate(mvMatrix, degToRad(yRot), [0, 1, 0]);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, terrain.VertexPositionBuffer);
-        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, terrain.VertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, terrain.VertexTextureCoordBuffer);
-        gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, terrain.VertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, grassTexture);
-        gl.uniform1i(shaderProgram.samplerUniform, 0);
-
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, terrain.VertexIndexBuffer);
-        setMatrixUniforms();
-        gl.drawElements(gl.TRIANGLES, terrain.VertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+    function drawScene() 
+    {
+        draw(objects.sky);
+        draw(objects.map);
     }
 
     var lastTime = 0;
-
-    function animate() 
+    function tick() 
     {
-        if (xRot > 360)
-        xRot -= 360;
-        if (yRot > 360)
-        yRot -= 360;
-    }
-
-
-    function tick() {
         requestAnimFrame(tick);
         handleKeys();
         drawScene();
-        animate();
-
     }
 
 
@@ -278,7 +219,7 @@
         initGL(canvas);
         initShaders();
         initBuffers();
-        initTexture();
+        initTextures();
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);

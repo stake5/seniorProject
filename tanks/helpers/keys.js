@@ -60,23 +60,3 @@ function handleKeyDown(event) {
 function handleKeyUp(event) {
   currentlyPressedKeys[event.keyCode] = false;
 }
-
-function handleKeys()
-{
-    if (currentlyPressedKeys[KEY_W]) 
-    {
-        xRot -= 1;
-    }
-    if (currentlyPressedKeys[KEY_S]) 
-    {
-        xRot += 1;
-    }
-    if (currentlyPressedKeys[KEY_D]) 
-    {
-        yRot += 1;
-    }
-    if (currentlyPressedKeys[KEY_A]) 
-    {
-        yRot -= 1;
-    }
-}

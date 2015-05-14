@@ -1,8 +1,17 @@
-function terrain()
+function skybox(x,y,z, asset) 
 {
-    this.VertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.VertexPositionBuffer);
-    vertices = [
+    this.pos = [x,y,z];
+    this.xRot = 0;
+    this.zRot = 0;
+    this.texture;
+    this.textureAsset = asset;
+}
+
+skybox.prototype.init = function() 
+{
+    this.vertexPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
+    this.vertices = [
         // Front face
         -1.0, -1.0,  1.0,
          1.0, -1.0,  1.0,
@@ -39,14 +48,14 @@ function terrain()
         -1.0,  1.0,  1.0,
         -1.0,  1.0, -1.0,
     ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    this.VertexPositionBuffer.itemSize = 3;
-    this.VertexPositionBuffer.numItems = 24;
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+    this.vertexPositionBuffer.itemSize = 3;
+    this.vertexPositionBuffer.numItems = 24;
 
     // keep an array of normals so that angles of light can be calulated
-    this.VertexNormalBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.VertexNormalBuffer);
-    var vertexNormals = [
+    this.vertexNormalBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
+    this.vetexNormals = [
         // Front face
          0.0,  0.0,  1.0,
          0.0,  0.0,  1.0,
@@ -83,13 +92,13 @@ function terrain()
         -1.0,  0.0,  0.0,
         -1.0,  0.0,  0.0
     ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW);
-    this.VertexNormalBuffer.itemSize = 3;
-    this.VertexNormalBuffer.numItems = 24;
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vetexNormals), gl.STATIC_DRAW);
+    this.vertexNormalBuffer.itemSize = 3;
+    this.vertexNormalBuffer.numItems = 24;
 
-    this.VertexTextureCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.VertexTextureCoordBuffer);
-    var textureCoords = [
+    this.vertexTextureCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexTextureCoordBuffer);
+    this.textureCoords = [
         // Front face
         0.0, 0.0,
         1.0, 0.0,
@@ -126,13 +135,13 @@ function terrain()
         1.0, 1.0,
         0.0, 1.0
     ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
-    this.VertexTextureCoordBuffer.itemSize = 2;
-    this.VertexTextureCoordBuffer.numItems = 24;
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.textureCoords), gl.STATIC_DRAW);
+    this.vertexTextureCoordBuffer.itemSize = 2;
+    this.vertexTextureCoordBuffer.numItems = 24;
 
-    this.VertexIndexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.VertexIndexBuffer);
-    VertexIndices = [
+    this.vertexIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
+    this.vertexIndices = [
         0, 1, 2,      0, 2, 3,    // Front face
         4, 5, 6,      4, 6, 7,    // Back face
         8, 9, 10,     8, 10, 11,  // Top face
@@ -140,8 +149,7 @@ function terrain()
         16, 17, 18,   16, 18, 19, // Right face
         20, 21, 22,   20, 22, 23  // Left face
     ];
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.VertexIndices), gl.STATIC_DRAW);
-    this.VertexIndexBuffer.itemSize = 1;
-    this.VertexIndexBuffer.numItems = 36;
-
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.vertexIndices), gl.STATIC_DRAW);
+    this.vertexIndexBuffer.itemSize = 1;
+    this.vertexIndexBuffer.numItems = 36;
 }
