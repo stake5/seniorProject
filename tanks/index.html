@@ -26,11 +26,16 @@
 
 <script type="text/javascript" src="utils/glMatrix-0.9.5.min.js"></script>
 <script type="text/javascript" src="utils/webgl-utils.js"></script>
+
 <script type="text/javascript" src="helpers/keys.js"></script>
+<script type="text/javascript" src="helpers/objectsIndex.js"></script>
 <script type="text/javascript" src="helpers/animation.js"></script>
+<script type="text/javascript" src="helpers/render.js"></script>
+
 <script type="text/javascript" src="objects/terrain.js"></script>
 <script type="text/javascript" src="objects/skybox.js"></script>
-<script type="text/javascript" src="helpers/render.js"></script>
+<script type="text/javascript" src="objects/sherman.js"></script>
+
 
 <script id="shader-fs" type="x-shader/x-fragment">
     precision mediump float;
@@ -171,27 +176,38 @@
     }
 
     // this is to be a container for all of the objects contained within the scene
-    var objects = {
-        map : new terrain(0.0, 0.0, -5, "assets/grassTexture.jpeg"),
-        sky : new skybox(0.0, 0.0, -5, "assets/glass.gif")
-    };
+    var objects = [
+        new skybox(0.0, 0.0, 0, "assets/glass.gif"),
+        new terrain(0.0, 0.0, -5, "assets/grassTexture.jpeg"), 
+        new sherman(0.0, 0.0, -5, "assets/camoTexture.png")
+    ];
 
     function initBuffers() 
     {
-        objects.sky.init();
-        objects.map.init(30, 10);
+        objects[SKYBOX].init();
+        objects[TERRAIN].init(30, 30);
+        objects[SHERMAN].init();
     }
 
     function initTextures() 
     {
-        initTexture(objects.map);
-        initTexture(objects.sky);
+        initTexture(objects[SKYBOX]);
+        initTexture(objects[TERRAIN]);
+        initTexture(objects[SHERMAN]);
     }
 
     function drawScene() 
     {
-        draw(objects.sky);
-        draw(objects.map);
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+
+        draw(objects[SKYBOX]);
+        gl.clear(gl.DEPTH_BUFFER_BIT); // send the skybox to the background
+
+        draw(objects[TERRAIN]);
+        draw(objects[SHERMAN]);
     }
 
     var lastTime = 0;

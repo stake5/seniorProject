@@ -1,12 +1,12 @@
 function handleKeys()
 {
-    if (currentlyPressedKeys[KEY_W]) 
+    if (currentlyPressedKeys[KEY_M]) 
     {
-        moveTank(0, 1, 0);
+        viewZoom(1);
     }
-    if (currentlyPressedKeys[KEY_S]) 
+    if (currentlyPressedKeys[KEY_N]) 
     {
-        moveTank(0, -1, 0);
+        viewZoom(-1);
     }
     if (currentlyPressedKeys[KEY_UP]) 
     {
@@ -28,49 +28,59 @@ function handleKeys()
     animationRules();
 }
 
-function moveTank(x, z, xRot)
+function viewZoom(z)
 {
-    // backward
-    objects.map.pos[0] += x;
-
-    // left and right
-    objects.map.pos[2] += z;
-
-    // TODO: rotate left
-
-    // TODO: rotate right
+    for (var i = 0; i < objects.length; i++) 
+    {
+        if (i != SKYBOX) 
+        {
+            objects[i].pos[2] += z;
+        };
+    };
 }
 
 function rotateView(x, z)
 {
-    objects.map.xRot += x;
-    objects.map.zRot += z;
+    for (var i = 0; i < objects.length; i++) 
+    {
+        objects[i].xRot += x;
+        objects[i].zRot += z;
+    };
 }
 
 // this is a function that contains the rules of animation
 // for each object
 function animationRules()
 {
-    // map rules
+    // [TERRAIN] rules
     // don't le the rotation go farther than overhead
-    if (objects.map.xRot > 90)
-        objects.map.xRot = 90;
 
-    // don't let the rotation go under the terrain
-    if (objects.map.xRot < 0)
-        objects.map.xRot = 0;
-    if (objects.map.zRot > 360)
-        objects.map.zRot -= 360;
+    // rotation rules
+    for (var i = 0; i < objects.length; i++) 
+    {
+        if (objects[i].xRot > 90)
+            objects[i].xRot = 90;
 
-    // don't zoom in too far
-    if (objects.map.pos[2] >= -5)
-        objects.map.pos[2] = -5;
+        // don't let the rotation go under the terrain
+        if (objects[i].xRot < 0)
+            objects[i].xRot = 0;
 
-    // skybox constant motion
-    var timeNow = new Date().getTime();
-    if (lastTime != 0) {
-        var elapsed = timeNow - lastTime;
-        objects.sky.xRot -= (75 * elapsed) / 1000.0;
-    }
-    lastTime = timeNow;
+        // don't let the rotation increment too much
+        if (objects[i].zRot > 360)
+            objects[i].zRot -= 360;
+    };
+
+    for (var i = 0; i < objects.length; i++) 
+    {
+        // don't zoom in or out too far
+        if (i != SKYBOX) 
+        {
+            if (objects[i].pos[2] > -5)
+                objects[i].pos[2] = -5;
+            if (objects[i].pos[2] < -50)
+                objects[i].pos[2] = -50;
+        };
+
+    };
+
 }
