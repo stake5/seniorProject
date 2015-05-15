@@ -1,4 +1,4 @@
-function sherman(x,y,z, asset) 
+function tank3(x,y,z, asset) 
 {
     this.pos = [x,y,z];
     this.xRot = 0;
@@ -7,7 +7,7 @@ function sherman(x,y,z, asset)
     this.textureAsset = asset;
 }
 
-sherman.prototype.init = function() 
+tank3.prototype.init = function() 
 {
     this.vertexPositionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);

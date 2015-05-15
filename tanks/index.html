@@ -31,10 +31,18 @@
 <script type="text/javascript" src="helpers/objectsIndex.js"></script>
 <script type="text/javascript" src="helpers/animation.js"></script>
 <script type="text/javascript" src="helpers/render.js"></script>
+<script type="text/javascript" src="helpers/helpers.js"></script>
 
 <script type="text/javascript" src="objects/terrain.js"></script>
 <script type="text/javascript" src="objects/skybox.js"></script>
 <script type="text/javascript" src="objects/sherman.js"></script>
+<script type="text/javascript" src="objects/tank2.js"></script>
+<script type="text/javascript" src="objects/tank3.js"></script>
+<script type="text/javascript" src="objects/tank4.js"></script>
+<script type="text/javascript" src="objects/tank5.js"></script>
+<script type="text/javascript" src="objects/tank6.js"></script>
+<script type="text/javascript" src="objects/tank7.js"></script>
+
 
 
 <script id="shader-fs" type="x-shader/x-fragment">
@@ -178,8 +186,14 @@
     // this is to be a container for all of the objects contained within the scene
     var objects = [
         new skybox(0.0, 0.0, 0, "assets/glass.gif"),
-        new terrain(0.0, 0.0, -5, "assets/grassTexture.jpeg"), 
-        new sherman(0.0, 0.0, -5, "assets/camoTexture.png")
+        new terrain(0.0, 0.0, -5.0, "assets/grassTexture.jpeg"), 
+        new sherman(0.0, 0.0, -5.0, "assets/camoTexture.png"),
+        new tank2(0.0, 3.0, -9.0, "assets/camoTexture.png"),
+        new tank3(3.0, 0.0, -5.0, "assets/camoTexture.png"),
+        new tank4(-3.0, 0.0, 5.0, "assets/camoTexture.png"),
+        new tank5(-5.0, 0.0, 9.0, "assets/camoTexture.png"),
+        new tank6(5.0, 0.0, 11.0, "assets/camoTexture.png"),
+        new tank7(0.0, 0.0, -5.0, "assets/camoTexture.png")
     ];
 
     function initBuffers() 
@@ -187,6 +201,12 @@
         objects[SKYBOX].init();
         objects[TERRAIN].init(30, 30);
         objects[SHERMAN].init();
+        objects[TANK2].init();
+        objects[TANK3].init();
+        objects[TANK4].init();
+        objects[TANK5].init();
+        objects[TANK6].init();
+        objects[TANK7].init();
     }
 
     function initTextures() 
@@ -194,6 +214,12 @@
         initTexture(objects[SKYBOX]);
         initTexture(objects[TERRAIN]);
         initTexture(objects[SHERMAN]);
+        initTexture(objects[TANK2]);
+        initTexture(objects[TANK3]);
+        initTexture(objects[TANK4]);
+        initTexture(objects[TANK5]);
+        initTexture(objects[TANK6]);
+        initTexture(objects[TANK7]);
     }
 
     function drawScene() 
@@ -208,9 +234,14 @@
 
         draw(objects[TERRAIN]);
         draw(objects[SHERMAN]);
+        draw(objects[TANK2]);
+        draw(objects[TANK3]);
+        draw(objects[TANK4]);
+        draw(objects[TANK5]);
+        draw(objects[TANK6]);
+        draw(objects[TANK7]);
     }
 
-    var lastTime = 0;
     function tick() 
     {
         requestAnimFrame(tick);
