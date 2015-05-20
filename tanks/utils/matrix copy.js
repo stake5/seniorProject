@@ -1,21 +1,25 @@
-function mat4(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {
+function mat4(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) 
+{
     return [a, b, c, d,
             e, f, g, h,
             i, j, k, l,
             m, n, o, p];
 }
+
 function mat4ID() {
     return mat4(1.0, 0.0, 0.0, 0.0,
                 0.0, 1.0, 0.0, 0.0,
                 0.0, 0.0, 1.0, 0.0,
                 0.0, 0.0, 0.0, 1.0);
 }
+
 function mat4Transpose(m) {
     return mat4(m[ 0], m[4], m[ 8], m[12],
                 m[ 1], m[5], m[ 9], m[13],
                 m[ 2], m[6], m[10], m[14],
                 m[ 3], m[7], m[11], m[15]);
 }
+
 function mat4_x_vec4(m, v) {
     //  0  1  2  3        x
     //  4  5  6  7        y
@@ -52,12 +56,14 @@ function mat4_x_mat4(m1, m2) {
                 m1[12] * m2[2] + m1[13] * m2[6] + m1[14] * m2[10] + m1[15] * m2[14],
                 m1[12] * m2[3] + m1[13] * m2[7] + m1[14] * m2[11] + m1[15] * m2[15]);
 }
+
 function mat4_x_mat4_chain() {
     var result = mat4ID();
     for (var i = 0; i < arguments.length; i++)
         result = mat4_x_mat4(result, arguments[i]);
     return result;
 }
+
 function mat3_x_vec3(m, v) {
     // 0 3 6     x
     // 1 4 7  *  y
@@ -72,16 +78,19 @@ function mat3(a, b, c, d, e, f, g, h, i) {
             d, e, f,
             g, h, i];
 }
+
 function mat3ID() {
     return mat3(1.0, 0.0, 0.0,
                 0.0, 1.0, 0.0,
                 0.0, 0.0, 1.0);
 }
+
 function mat3Transpose(m) {
     return mat3(m[0], m[3], m[6],
                 m[1], m[4], m[7],
                 m[2], m[5], m[8]);
 }
+
 function mat4ToMat3(m) {
     return mat3(m[ 0], m[ 1], m[ 2],
                 m[ 4], m[ 5], m[ 6],
@@ -92,17 +101,19 @@ function MatrixStack() {
     this.stack = [];
     this.stack.push(mat4ID());
 }
+
 MatrixStack.prototype.push = function(nextMat) {
     var back = this.stack.length - 1;
     this.stack.push(mat4_x_mat4(this.stack[back], nextMat));
 };
+
 MatrixStack.prototype.pop = function() {
     if (this.stack.length > 1) this.stack.pop();
 };
+
 MatrixStack.prototype.back = function() {
     return (this.stack[this.stack.length-1]);
 };
-
 
 function ortho(l, r, b, t, n, f) {
     return mat4((2.0/(r-l)), 0.0        , 0.0         , -((r+l)/(r-l)),
@@ -110,6 +121,7 @@ function ortho(l, r, b, t, n, f) {
                 0.0        , 0.0        , (-2.0/(f-n)), -((f+n)/(f-n)),
                 0.0        , 0.0        , 0.0         , 1.0);
 }
+
 function orthoAspect(aspectRatio) {
     var l, r, b, t;
     if (aspectRatio <= 1)
@@ -126,6 +138,7 @@ function orthoAspect(aspectRatio) {
     }
     return ortho(l, r, t, b, -1, 1);
 }
+
 function perspective(l, r, t, b, n, f) {
     return mat4(((2.0*n)/(r-l)), 0.0            , ((r+l)/(r-l)) , 0.0,
                 0.0            , ((2.0*n)/(t-b)), ((t+b)/(t-b)) , 0.0,
@@ -134,7 +147,9 @@ function perspective(l, r, t, b, n, f) {
 }
 
 Math.toRadians = function(degrees) { return degrees * Math.PI / 180.0; };
+
 Math.toDegrees = function(radians) { return radians * 180.0 / Math.PI; };
+
 function perspectiveAspect(aspect, fov, n, f) {
     var rad = Math.toRadians(fov / 2.0);
     var scale = Math.tan(rad) * n;
@@ -162,18 +177,21 @@ function lookAt(pos, look, up) {
     var m2 = translate(-pos.x, -pos.y, -pos.z);
     return mat4_x_mat4(m1, m2);
 }
+
 function translate(x, y, z) {
     return mat4(1.0, 0.0, 0.0, x,
                 0.0, 1.0, 0.0, y,
                 0.0, 0.0, 1.0, z,
                 0.0, 0.0, 0.0, 1.0);
 }
+
 function scale(x, y, z) {
     return mat4(x  , 0.0, 0.0, 0.0,
                 0.0, y  , 0.0, 0.0,
                 0.0, 0.0, z  , 0.0,
                 0.0, 0.0, 0.0, 1.0);
 }
+
 function scaleAll(s) {return scale(s, s, s);}
 
 // pitch
@@ -185,6 +203,7 @@ function rotateX(degrees) {
                 0.0, sinA,  cosA, 0.0,
                 0.0, 0.0 ,  0.0 , 1.0);
 }
+
 // yaw
 function rotateY(degrees) {
     var cosA = Math.cos((Math.PI / 180.0) * degrees);
@@ -194,6 +213,7 @@ function rotateY(degrees) {
                 -sinA, 0.0, cosA, 0.0,
                 0.0  , 0.0, 0.0 , 1.0);
 }
+
 // roll
 function rotateZ(degrees) {
     var cosA = Math.cos((Math.PI / 180.0) * degrees);
@@ -204,100 +224,122 @@ function rotateZ(degrees) {
                 0.0 , 0.0 , 0.0, 1.0);
 }
 
-
 function vec2(a, b) {
     if (!a) a = 0;
     if (!b) b = 0;
     this.x = a; this.y = b;
 }
+
 vec2.prototype.dot = function(rhs) {
     return (this.x * rhs.x) + (this.y * rhs.y);
-};
+}
+
 vec2.prototype.subtVec = function(rhs) {
     return new vec2(this.x - rhs.x, this.y - rhs.y);
 };
+
 vec2.prototype.addVec = function(rhs) {
     return new vec2(this.x + rhs.x, this.y + rhs.y);
-};
+}
+
 vec2.prototype.multVec = function(rhs) {
     return new vec2(this.x * rhs.x, this.y * rhs.y);
-};
+}
+
 vec2.prototype.scale = function(rhs) {
     return new vec2(this.x * rhs, this.y * rhs);
-};
+}
+
 vec2.prototype.length = function() {
     return Math.sqrt(this.dot(this));
-};
+}
+
 vec2.prototype.normalize = function() {
     var mag = Math.sqrt(this.dot(this));
     if (mag != 0.0) {this.x /= mag; this.y /= mag;}
-};
+}
+
 vec2.prototype.distance = function(rhs) {
     var a = this.subtVec(rhs);
     return Math.sqrt((a.x * a.x) + (a.y * a.y));
-};
+}
+
 vec2.prototype.angleBetween = function(vec) {
     var a = clamp(this.dot(vec), -1.0, 1.0);
     return Math.acos(a);
-};
+}
+
 // usage:  v.rotate(vec2RotateInfo(90.0), ori);
 vec2.prototype.rotate = function(ri, por) {
     var cosA = ri.x; var sinA = ri.y;
     var min = new vec2(this.x - por.x, this.y - por.y);
     this.x = ((min.x * cosA) - (min.y * sinA)) + por.x;
     this.y = ((min.x * sinA) + (min.y * cosA)) + por.y;
-};
+}
+
 vec2.prototype.str = function() {
     return "" + this.x + ", " + this.y;
-};
-function vec2RotateInfo(degrees) {
+}
+
+function vec2RotateInfo(degrees) 
+{
     var cosA = Math.cos((Math.PI / 180.0) * degrees);
     var sinA = Math.sin((Math.PI / 180.0) * degrees);
     return new vec2(cosA, sinA);
 }
 
-
-
-function vec3(a, b, c) {
+function vec3(a, b, c)
+{
     if (!a) 
-        a = 0;
+        a = 0; 
     if (!b) 
         b = 0; 
     if (!c) 
         c = 0;
-    this.x = a; this.y = b; this.z = c;
+    this.x = a; 
+    this.y = b; 
+    this.z = c;
 }
 
 vec3.prototype.dot = function(rhs) {
     return (this.x * rhs.x) + (this.y * rhs.y) + (this.z * rhs.z);
 };
+
 vec3.prototype.cross = function(rhs) {
     return new vec3((this.y * rhs.z) - (this.z * rhs.y),
                     (this.z * rhs.x) - (this.x * rhs.z),
                     (this.x * rhs.y) - (this.y * rhs.x));
 };
+
 vec3.prototype.subtVec = function(rhs) {
     return new vec3(this.x - rhs.x, this.y - rhs.y, this.z - rhs.z);
 };
+
 vec3.prototype.addVec = function(rhs) {
     return new vec3(this.x + rhs.x, this.y + rhs.y, this.z + rhs.z);
 };
+
 vec3.prototype.multVec = function(rhs) {
     return new vec3(this.x * rhs.x, this.y * rhs.y, this.z * rhs.z);
 };
+
 vec3.prototype.scale = function(rhs) {
     return new vec3(this.x * rhs, this.y * rhs, this.z * rhs);
 };
+
 vec3.prototype.length = function() {
     return Math.sqrt(this.dot(this));
 };
+
 vec3.prototype.lengthSquared = function() {
     return (this.x * this.x) + (this.y * this.y) + (this.z * this.z);
 };
+
 vec3.prototype.normalize = function() {
     var mag = Math.sqrt(this.dot(this));
     if (mag != 0.0) {this.x /= mag; this.y /= mag; this.z /= mag;}
 };
+
 vec3.prototype.str = function() {
     var xs = this.x.toFixed(2);
     var ys = this.y.toFixed(2);
@@ -305,13 +347,15 @@ vec3.prototype.str = function() {
     return "" + xs + ", " + ys + ", " + zs;
 };
 
-
-
 function vec4(a, b, c, d) {
-    if (!a) a = 0;
-    if (!b) b = 0;
-    if (!c) c = 0;
-    if (!d) d = 0;
+    if (!a) 
+        a = 0;
+    if (!b) 
+        b = 0;
+    if (!c) 
+        c = 0;
+    if (!d) 
+        d = 0;
     this.x = a; this.y = b; this.z = c; this.w = d;
 }
 vec4.prototype.dot = function(rhs) {

@@ -1,10 +1,10 @@
 function tank5(x,y,z, asset) 
 {
     this.pos = [x,y,z];
-    this.xRot = 0;
-    this.zRot = 0;
+    this.rotation = [0, 0, 0];
     this.texture;
     this.textureAsset = asset;
+    this.direction = [0, 0, 0];
 }
 
 tank5.prototype.init = function() 

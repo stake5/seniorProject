@@ -1,10 +1,12 @@
 function sherman(x,y,z, asset) 
 {
-    this.pos = [x,y,z];
-    this.xRot = 0;
-    this.zRot = 0;
+    this.pos = vec3.create();
+    this.rotation = [0, 0, 0];
     this.texture;
     this.textureAsset = asset;
+    this.direction = [0, 0, 0]; 
+    this.distance = 0.0;
+    this.name = "M4 Sherman";
 }
 
 sherman.prototype.init = function() 

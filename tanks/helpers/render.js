@@ -5,8 +5,9 @@ function draw(object)
     mat4.translate(mvMatrix, object.pos);
 
     mvPushMatrix();
-    mat4.rotate(mvMatrix, degToRad(object.xRot), [1, 0, 0]);
-    mat4.rotate(mvMatrix, degToRad(object.zRot), [0, 1, 0]);
+    mat4.rotate(mvMatrix, degToRad(object.rotation[X]), [1, 0, 0]);
+    mat4.rotate(mvMatrix, degToRad(object.rotation[Y]), [0, 1, 0]);
+    mat4.rotate(mvMatrix, degToRad(object.rotation[Z]), [0, 0, 1]);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, object.vertexPositionBuffer);
     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, object.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -23,7 +24,6 @@ function draw(object)
     gl.drawElements(gl.TRIANGLES, object.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
     mvPopMatrix();
-    // console.log(sky.pos);
 }
 
 function handleLoadedTexture(object) 
@@ -49,6 +49,4 @@ function initTexture(object) {
     }
 
     object.texture.image.src = object.textureAsset;
-    console.log(object.textureAsset);
-    console.log(object.texture);
 }
