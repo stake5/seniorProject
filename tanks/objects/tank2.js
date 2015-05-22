@@ -1,10 +1,14 @@
 function tank2(x,y,z, asset) 
 {
-    this.pos = [x,y,z];
+    this.pos = [x, y, z];
     this.rotation = [0, 0, 0];
     this.texture;
     this.textureAsset = asset;
-    this.direction = [0, 0, 0];
+    this.direction = [0, 0, 0]; 
+    this.distance = 0.0;
+    this.distanceToFocus = 0.0;
+    this.focusDirection = [0, 0, 0];
+    this.name = "tank 2";
 }
 
 tank2.prototype.init = function() 

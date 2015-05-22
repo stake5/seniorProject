@@ -18,9 +18,9 @@ function handleKeys()
 
     // movement controls
     if (currentlyPressedKeys[KEY_W])
-        moveTank(.05);
+        moveTank(.1);
     if (currentlyPressedKeys[KEY_S])
-        moveTank(-.05);
+        moveTank(-.1);
     if (currentlyPressedKeys[KEY_A])
         rotateObject(0, -1, 0);
     if (currentlyPressedKeys[KEY_D])
@@ -64,40 +64,46 @@ function rotateView(x, y, z)
         objects[i].rotation[X] += x;
         objects[i].rotation[Y] += y;
         objects[i].rotation[Z] += z;
+
+        objects[i].direction[X] += x;
+        objects[i].direction[Y] += y;
+        objects[i].direction[Z] += z;
+
+        objects[i].focusDirection[X] -= x;
+        objects[i].focusDirection[Y] -= y;
+        objects[i].focusDirection[Z] -= z;
     };
 
-    // // code for keeping the boxes in place relative to the focus
-    // for (var i = 0; i < objects.length; i++) 
-    // {
-    //     if (i != SKYBOX && i != TERRAIN && i != FOCUS)
-    //     {
-    //         objects[i].pos[X] = objects[FOCUS].pos[X] - objects[i].direction;
-    //     }
-    // };
+    for (var i = 0; i < objects.length; i++) 
+    {
+        objects[i].distanceToFocus = "";
+        if (i != SKYBOX && i != FOCUS) 
+        {
+            var z = Math.cos(degToRad(objects[i].focusDirection[Z])) * objects[i].distanceToFocus;
+            var y = Math.sin(degToRad(objects[i].focusDirection[Y])) * objects[i].distanceToFocus;
+            var x = Math.sin(degToRad(objects[i].focusDirection[X])) * objects[i].distanceToFocus;
+
+            objects[i].pos[Z] += z;
+            objects[i].pos[Y] += y; 
+            objects[i].pos[X] += x;
+
+        };
+    }; // TODO FINISH THIS
 }
 
 function moveTank(distance)
 {
     for (var i = 0; i < objects.length; i++) 
     {
-        objects[FOCUS].distance += distance;
+        objects[FOCUS].distance = distance;
         if (i != SKYBOX && i != FOCUS) 
         {
-            // soh cah toa
+            var z = Math.cos(degToRad(objects[FOCUS].direction[Y])) * objects[FOCUS].distance;
+            var x = Math.sin(degToRad(objects[FOCUS].direction[Y])) * objects[FOCUS].distance;
 
-            // cos(angle) = a / h
+            objects[i].pos[Z] += z;
+            objects[i].pos[X] += x;
 
-            // cos(angle) * h = a
-
-            var adjacent = Math.cos(degToRad(objects[FOCUS].direction[Y])) * objects[FOCUS].distance;
-            var opposite = Math.sin(degToRad(objects[FOCUS].direction[Y])) * objects[FOCUS].distance;
-            console.log("direction: " + objects[FOCUS].direction[Y]);
-            console.log("distance: " + objects[FOCUS].distance);
-
-            objects[i].pos[X] = adjacent;
-            objects[i].pos[Z] = opposite;
-            console.log("adjacent: " + adjacent);
-            console.log("opposite: " + opposite);
         };
     };
 }
@@ -120,8 +126,14 @@ function changeFocus(newFocus)
     {
         if (i != SKYBOX) 
         {
+            // change the position of each object relative to the position of the focus object.
             objects[i].pos = addArrays(objects[i].pos, difference); 
-            // objects[i].direction = degToRad(objects[i].pos[X] / objects[i].pos[Z]); // TODO: fix this may not even need this
+
+            // update the focus direction for each object
+            for (var j = 0; j < objects[i].focusDirection.length; j++) {
+                console.log(j);
+                objects[i].focusDirection[j] = objects[i].pos[j] - objects[FOCUS].pos[j];
+            };
         };
     };
     
@@ -157,11 +169,13 @@ function animationRules()
 
     for (var i = 0; i < objects.length; i++) 
     {
+
+        if (objects[FOCUS].pos[Z] > -5)
+            objects[FOCUS].pos[Z] = -5;
         // don't zoom in or out too far
-        if (i != SKYBOX) 
+        if (i != SKYBOX && i != TERRAIN) 
         {
-            if (objects[i].pos[2] > -5)
-                objects[i].pos[2] = -5;
+
             // if (objects[i].pos[2] < -50)
             //     objects[i].pos[2] = -50;
         };

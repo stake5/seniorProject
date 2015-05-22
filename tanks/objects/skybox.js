@@ -5,7 +5,7 @@ function skybox(x,y,z, asset)
     this.texture;
     this.textureAsset = asset;
     this.direction = [0, 0, 0]; 
-
+    this.focusDirection = [0, 0, 0];
 }
 
 skybox.prototype.init = function() 

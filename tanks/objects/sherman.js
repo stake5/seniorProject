@@ -1,11 +1,13 @@
 function sherman(x,y,z, asset) 
 {
-    this.pos = vec3.create();
+    this.pos = [x, y, z];
     this.rotation = [0, 0, 0];
     this.texture;
     this.textureAsset = asset;
     this.direction = [0, 0, 0]; 
     this.distance = 0.0;
+    this.distanceToFocus = 0.0;
+    this.focusDirection = [0, 0, 0];
     this.name = "M4 Sherman";
 }
 

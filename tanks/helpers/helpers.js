@@ -43,6 +43,4 @@ function updateHUD()
 	document.getElementById("tz").innerHTML = objects[TERRAIN].pos[Z];
 
 	document.getElementById("focus").innerHTML = objects[FOCUS].name;
-
-
 }
