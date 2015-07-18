@@ -62,3 +62,5 @@ function handleKeyDown(event) {
 function handleKeyUp(event) {
   currentlyPressedKeys[event.keyCode] = false;
 }
+
+var F = false;

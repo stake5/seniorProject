@@ -8,7 +8,7 @@ function Sherman()
 }
 
 // Fill the buffer with the values that define Sherman.
-Sherman.prototype.setGeometry = function(gl) 
+Sherman.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -956,7 +956,7 @@ Sherman.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-Sherman.prototype.setColors = function(gl) 
+Sherman.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

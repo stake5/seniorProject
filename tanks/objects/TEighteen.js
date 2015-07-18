@@ -8,7 +8,7 @@ function TEighteen()
 }
 
 // Fill the buffer with the values that define TEighteen.
-TEighteen.prototype.setGeometry = function(gl) 
+TEighteen.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -1778,7 +1778,7 @@ TEighteen.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-TEighteen.prototype.setColors = function(gl) 
+TEighteen.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

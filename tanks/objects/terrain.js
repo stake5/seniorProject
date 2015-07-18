@@ -7,7 +7,7 @@ function Terrain()
 }
 
 // Fill the buffer with the values that define Terrain.
-Terrain.prototype.setGeometry = function(gl) 
+Terrain.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     var array = new Array();
@@ -30,7 +30,7 @@ Terrain.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-Terrain.prototype.setColors = function(gl) 
+Terrain.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

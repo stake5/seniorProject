@@ -29,9 +29,11 @@
         background-color: rgba(0,0,0,0.65);
     }
 </style>
-<script src="resources/jquery-1.7.1.min.js"></script>
 <script src="resources/webgl-utils.js"></script>
+
 <script src="helpers/helpers.js"></script>
+<script src="helpers/scene.js"></script>
+<script src="helpers/render.js"></script>
 <script src="helpers/objectHelpers.js"></script>
 <script src="helpers/animation.js"></script>
 <script src="helpers/keys.js"></script>
@@ -60,15 +62,34 @@
 <script>
 "use strict";
 
-$(function(){
-    main();
-});
+// globals
+var gl;
+var program;
 
+// program (shaders) globals
+var positionLocation;
+var colorLocation;
+var matrixLocation;
+var fieldOfViewRadians;
+
+// globals draw variables
+var aspect;
+var projectionMatrix;
+var cameraMatrix;
+var cameraPosition;
+var up;
+var cameraMatrix;
+var viewMatrix;
+
+// initializing helpers
 var helpers = new Helpers();
+
+// camera globals
 var cameraZ = 30;
 var cameraHeight = 8;
 var cameraAngleRadians = degToRad(180);
 
+// objects
 var skybox = new Skybox(0,0,0);
 var objects = [
     new Terrain(),
@@ -104,10 +125,10 @@ var children = [
     new BatChatillionTurret()
 ];
 
-function main() {
-    // Get A WebGL context
+function webGLStart() 
+{
     var canvas = document.getElementById("canvas");
-    
+
     // make the canvas fullscreen
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -115,148 +136,53 @@ function main() {
     window.onresize = function() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        //renderer.reshape(canvas.width, canvas.height);
     }
+
+    initGL(canvas);
     
-    var gl = getWebGLContext(canvas);
-    if (!gl) {
-    return;
-    }
-
-    gl.enable(gl.CULL_FACE);
-    gl.enable(gl.DEPTH_TEST);
-
     // setup GLSL program
-    var program = createProgramFromScripts(gl, ["3d-vertex-shader", "3d-fragment-shader"]);
+    program = createProgramFromScripts(gl, ["3d-vertex-shader", "3d-fragment-shader"]);
     gl.useProgram(program);
 
     // look up where the vertex data needs to go.
-    var positionLocation = gl.getAttribLocation(program, "a_position");
-    var colorLocation = gl.getAttribLocation(program, "a_color");
+    positionLocation = gl.getAttribLocation(program, "a_position");
+    colorLocation = gl.getAttribLocation(program, "a_color");
 
     // lookup uniforms
-    var matrixLocation = gl.getUniformLocation(program, "u_matrix");
-    
-    function initScene()
-    { 
-        // Set Geometry and colors
-        skybox.setGeometry(gl);
-        skybox.setColors(gl);
-        objects.forEach(function(object)
-        {
-            object.setGeometry(gl);
-            object.setColors(gl);
-        });
-        children.forEach(function(childObject)
-        {
-            childObject.setGeometry(gl);
-            childObject.setColors(gl);
-        });
-    }
+    matrixLocation = gl.getUniformLocation(program, "u_matrix");
 
-    var fieldOfViewRadians = degToRad(60);
-    
+    fieldOfViewRadians = degToRad(60);
 
     initScene();
-    
-    document.onkeydown = handleKeyDown;
-    document.onkeyup = handleKeyUp;
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.CULL_FACE);
+    gl.enable(gl.DEPTH_TEST);
 
     setOrigionalPositionsAndRotation();
     tick();
-    
-    function tick() 
-    {
-        requestAnimFrame(tick);
-        handleKeys();
-        drawScene(objects, children);
+
+    document.onkeydown = handleKeyDown;
+    document.onkeyup = handleKeyUp;
+}
+
+function initGL(canvas)
+{
+    gl = getWebGLContext(canvas);
+    if (!gl) {
+    alert("I am an alert box!");
     }
-    
-    // Draw the scene.
-    function drawScene(objects, children) 
-    {
-        // Clear the canvas AND the depth buffer.
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        // Compute the projection matrix
-        var aspect = canvas.clientWidth / canvas.clientHeight;
-        var projectionMatrix =
-            makePerspective(fieldOfViewRadians, aspect, 1, 2000);
+}
 
-        // Compute the position of the first F
-        // camera always rotates around the origin F.position = 0, 0, 0
-
-        // Use matrix math to compute a position on the circle.
-        var cameraMatrix = makeTranslation(0, cameraHeight, cameraZ);
-        cameraMatrix = matrixMultiply(
-            cameraMatrix, makeYRotation(cameraAngleRadians));
-
-
-        // Get the camera's postion from the matrix we computed
-        var cameraPosition = [
-            cameraMatrix[12],
-            cameraMatrix[13],
-            cameraMatrix[14]];
-
-        var up = [0, 1, 0];
-
-        // Compute the camera's matrix using look at.
-        var cameraMatrix = makeLookAt(cameraPosition, objects[FOCUS].position, up);
-
-        // Make a view matrix from the camera matrix.
-        var viewMatrix = makeInverse(cameraMatrix);
-
-        // center the skybox around the camera and send the walls of the box to the background
-        skybox.position = cameraPosition;
-        draw(skybox, cameraMatrix, viewMatrix, projectionMatrix);
-        gl.clear(gl.DEPTH_BUFFER_BIT); // send the skybox to the background
-
-        objects.forEach(function(object)
-        {
-            draw(object, cameraMatrix, viewMatrix, projectionMatrix);
-        });
-        children.forEach(function(childObject)
-        {
-            draw(childObject, cameraMatrix, viewMatrix, projectionMatrix);
-        });
-    }
-    
-    function draw(object, cameraMatrix, viewMatrix, projectionMatrix)
-    {    
-        // setup the translation of the object
-        var translationMatrix = makeTranslation(object.position[X], object.position[Y], object.position[Z]);
-
-        var rotationYMatrix = makeYRotation(object.rotation[Y]);
-        
-        // Multiply the matrices.
-        var matrix = rotationYMatrix;
-        matrix = matrixMultiply(matrix, translationMatrix);
-        matrix = matrixMultiply(matrix, viewMatrix);
-        matrix = matrixMultiply(matrix, projectionMatrix);
-
-        // Set the matrix.
-        gl.uniformMatrix4fv(matrixLocation, false, matrix);
-
-        // Create a buffer.
-        gl.bindBuffer(gl.ARRAY_BUFFER, object.vbo);
-        gl.enableVertexAttribArray(positionLocation);
-        gl.vertexAttribPointer(positionLocation, object.vbo.itemSize, gl.FLOAT, false, 0, 0);
-
-        // Create a buffer for colors.
-        gl.bindBuffer(gl.ARRAY_BUFFER, object.cbo);
-        gl.enableVertexAttribArray(colorLocation);
-
-        // We'll supply RGB as bytes.
-        gl.vertexAttribPointer(colorLocation, object.cbo.itemSize, gl.UNSIGNED_BYTE, true, 0, 0); 
-
-        // Draw the geometry.
-        gl.drawArrays(gl.TRIANGLES, 0, object.vbo.numItems);
-    }
+function tick() 
+{
+    requestAnimFrame(tick);
+    handleKeys();
+    drawScene(objects, children);
 }
 
 </script>
-   
-    
-    
     
 <!-- vertex shader -->
 <script id="3d-vertex-shader" type="x-shader/x-vertex">
@@ -291,7 +217,7 @@ void main() {
     
 </head>
     
-<body>
+<body onload="webGLStart();">
     <canvas id="canvas" width="400" height="300"></canvas>
         <div class="overlay">
             <!--

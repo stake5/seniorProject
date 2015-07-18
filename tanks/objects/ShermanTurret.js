@@ -7,7 +7,7 @@ function ShermanTurret()
 }
 
 // Fill the buffer with the values that define ShermanTurret.
-ShermanTurret.prototype.setGeometry = function(gl) 
+ShermanTurret.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -3499,7 +3499,7 @@ ShermanTurret.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-ShermanTurret.prototype.setColors = function(gl) 
+ShermanTurret.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

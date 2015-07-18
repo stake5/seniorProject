@@ -8,7 +8,7 @@ function ELC()
 }
 
 // Fill the buffer with the values that define ELC.
-ELC.prototype.setGeometry = function(gl) 
+ELC.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -740,7 +740,7 @@ ELC.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-ELC.prototype.setColors = function(gl) 
+ELC.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

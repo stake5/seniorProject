@@ -7,7 +7,7 @@ function ELCTurret()
 }
 
 // Fill the buffer with the values that define ELCTurret.
-ELCTurret.prototype.setGeometry = function(gl) 
+ELCTurret.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -511,7 +511,7 @@ ELCTurret.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-ELCTurret.prototype.setColors = function(gl) 
+ELCTurret.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

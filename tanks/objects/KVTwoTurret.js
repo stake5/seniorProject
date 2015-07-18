@@ -7,7 +7,7 @@ function KVTwoTurret()
 }
 
 // Fill the buffer with the values that define KVTwoTurret.
-KVTwoTurret.prototype.setGeometry = function(gl) 
+KVTwoTurret.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -895,7 +895,7 @@ KVTwoTurret.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-KVTwoTurret.prototype.setColors = function(gl) 
+KVTwoTurret.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

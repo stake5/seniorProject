@@ -1,4 +1,7 @@
 function handleKeys() {
+    // check keys
+    if (!currentlyPressedKeys[KEY_F])
+        F = false;
     // zoom controls
     if (currentlyPressedKeys[KEY_SUBTRACT])
         viewZoom(.5);
@@ -50,7 +53,7 @@ function handleKeys() {
         changeFocus(BATCHAT);
     
     if (currentlyPressedKeys[KEY_F])
-        playSounds();
+        shoot();
     
     rotateTurret();
     animationRules();
@@ -111,6 +114,45 @@ function moveTank(distance)
 function rotateTank(y)
 {
     objects[FOCUS].rotation[Y] += degToRad(y);
+}
+
+function shoot()
+{
+    if (!F)
+    {
+        playSounds();
+        if (FOCUSCHILD != -1)
+            kick(1);
+        else
+            moveTank(1);
+        F = true;
+    }
+}
+
+function kick(distance)
+{
+    for (var i = 0; i < objects.length; i++) 
+    {
+        if (i != FOCUS) 
+        {
+            var z = Math.cos(children[FOCUSCHILD].rotation[Y]) * distance;
+            var x = Math.sin(children[FOCUSCHILD].rotation[Y]) * distance;
+
+            objects[i].position[Z] += z;
+            objects[i].position[X] += x;
+        };
+    }; 
+    for (var i = 0; i < children.length; i++) 
+    {
+        if (i != FOCUSCHILD) 
+        {
+            var z = Math.cos(children[FOCUSCHILD].rotation[Y]) * distance;
+            var x = Math.sin(children[FOCUSCHILD].rotation[Y]) * distance;
+
+            children[i].position[Z] += z;
+            children[i].position[X] += x;
+        };
+    }; 
 }
 
 function changeFocus(newFocus)

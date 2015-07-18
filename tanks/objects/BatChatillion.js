@@ -8,7 +8,7 @@ function BatChatillion()
 }
 
 // Fill the buffer with the values that define BatChatillion.
-BatChatillion.prototype.setGeometry = function(gl) 
+BatChatillion.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -884,7 +884,7 @@ BatChatillion.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-BatChatillion.prototype.setColors = function(gl) 
+BatChatillion.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

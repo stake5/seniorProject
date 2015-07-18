@@ -7,7 +7,7 @@ function Hangar()
 }
 
 // Fill the buffer with the values that define Hangar.
-Hangar.prototype.setGeometry = function(gl) 
+Hangar.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -175,7 +175,7 @@ Hangar.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-Hangar.prototype.setColors = function(gl) 
+Hangar.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

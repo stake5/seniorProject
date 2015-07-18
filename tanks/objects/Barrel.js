@@ -7,7 +7,7 @@ function Barrel()
 }
 
 // Fill the buffer with the values that define Barrel.
-Barrel.prototype.setGeometry = function(gl) 
+Barrel.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -391,7 +391,7 @@ Barrel.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-Barrel.prototype.setColors = function(gl) 
+Barrel.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

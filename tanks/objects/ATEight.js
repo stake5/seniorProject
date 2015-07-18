@@ -8,7 +8,7 @@ function ATEight()
 }
 
 // Fill the buffer with the values that define ATEight.
-ATEight.prototype.setGeometry = function(gl) 
+ATEight.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -3188,7 +3188,7 @@ ATEight.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-ATEight.prototype.setColors = function(gl) 
+ATEight.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

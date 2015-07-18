@@ -8,7 +8,7 @@ function KVTwo()
 }
 
 // Fill the buffer with the values that define KVTwo.
-KVTwo.prototype.setGeometry = function(gl) 
+KVTwo.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -1136,7 +1136,7 @@ KVTwo.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-KVTwo.prototype.setColors = function(gl) 
+KVTwo.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

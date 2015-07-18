@@ -7,7 +7,7 @@ function Skybox()
 }
 
 // Fill the buffer with the values that define Skybox.
-Skybox.prototype.setGeometry = function(gl) 
+Skybox.prototype.setGeometry = function() 
 {
     //TODO: make this able to be tracked
     this.vbo = gl.createBuffer();
@@ -73,7 +73,7 @@ Skybox.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-Skybox.prototype.setColors = function(gl) 
+Skybox.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);

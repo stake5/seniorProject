@@ -8,7 +8,7 @@ function Hetzer()
 }
 
 // Fill the buffer with the values that define Hetzer.
-Hetzer.prototype.setGeometry = function(gl) 
+Hetzer.prototype.setGeometry = function() 
 {
     this.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -1628,7 +1628,7 @@ Hetzer.prototype.setGeometry = function(gl)
     this.vbo.numItems = this.vertices.length / this.vbo.itemSize;
 }
 
-Hetzer.prototype.setColors = function(gl) 
+Hetzer.prototype.setColors = function() 
 {
     this.cbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);
