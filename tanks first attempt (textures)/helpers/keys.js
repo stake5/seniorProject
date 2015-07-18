@@ -12,6 +12,8 @@ var KEY_UP        = 38;
 var KEY_RIGHT     = 39;
 var KEY_DOWN      = 40;
 var KEY_DELETE    = 46;
+var KEY_SUBTRACT  = 109;
+var KEY_ADD       = 187;
 
 var KEY_1 = 49;
 var KEY_2 = 50;
@@ -59,25 +61,4 @@ function handleKeyDown(event) {
 
 function handleKeyUp(event) {
   currentlyPressedKeys[event.keyCode] = false;
-}
-
-function handleKeys()
-{
-    if (currentlyPressedKeys[KEY_W]) 
-    {
-        xRot -= 1;
-        console.log();
-    }
-    if (currentlyPressedKeys[KEY_S]) 
-    {
-        xRot += 1;
-    }
-    if (currentlyPressedKeys[KEY_D]) 
-    {
-        yRot += 1;
-    }
-    if (currentlyPressedKeys[KEY_A]) 
-    {
-        yRot -= 1;
-    }
 }

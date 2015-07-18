@@ -12,7 +12,7 @@ var KEY_UP        = 38;
 var KEY_RIGHT     = 39;
 var KEY_DOWN      = 40;
 var KEY_DELETE    = 46;
-var KEY_SUBTRACT  = 109;
+var KEY_SUBTRACT  = 189;
 var KEY_ADD       = 187;
 
 var KEY_1 = 49;

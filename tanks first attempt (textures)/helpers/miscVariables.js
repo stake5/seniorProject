@@ -1,0 +1,1 @@
+var cameraAngle = 0;

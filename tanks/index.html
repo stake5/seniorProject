@@ -1,335 +1,293 @@
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
 <html>
-
 <head>
 <title>Tanks!</title>
-<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-
-        <style type="text/css">
-        body {
-            margin: 0px auto;
-            background-color:rgb(0,0,0);
-            color:rgb(255,255,255);
-            text-align:center;
-            border: 0;
-            overflow: hidden; /*  Disable scrollbars */
-            display: block;  /* No floating content on sides */
-        }
-        canvas {
-            position:absolute;
-            top:0;
-            left:0;
-            width:100%;
-            height:100%;
-            z-index:-1;
-        }
-        .overlay {
-            position: absolute;
-            width: 10%;
-            background-color: rgba(0,0,0,0.65);
-        }
-        .overlay span {
-            /*color: cyan;*/
-        }
-        </style>
-
-<script type="text/javascript" src="utils/matrix.js"></script>
-<script type="text/javascript" src="utils/webgl-utils.js"></script>
-
-<script type="text/javascript" src="helpers/keys.js"></script>
-<script type="text/javascript" src="helpers/objectsIndex.js"></script>
-<script type="text/javascript" src="helpers/animation.js"></script>
-<script type="text/javascript" src="helpers/render.js"></script>
-<script type="text/javascript" src="helpers/helpers.js"></script>
-
-<script type="text/javascript" src="objects/terrain.js"></script>
-<script type="text/javascript" src="objects/skybox.js"></script>
-<script type="text/javascript" src="objects/sherman.js"></script>
-<script type="text/javascript" src="objects/tank2.js"></script>
-<script type="text/javascript" src="objects/tank3.js"></script>
-<script type="text/javascript" src="objects/tank4.js"></script>
-<script type="text/javascript" src="objects/tank5.js"></script>
-<script type="text/javascript" src="objects/tank6.js"></script>
-<script type="text/javascript" src="objects/tank7.js"></script>
-
-
-
-<script id="shader-fs" type="x-shader/x-fragment">
-    precision mediump float;
-
-    varying vec2 vTextureCoord;
-
-    uniform sampler2D uSampler;
-
-    void main(void) {
-        gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+<style>
+    body {
+        margin: 0px auto;
+        background-color:rgb(0,0,0);
+        color:rgb(255,255,255);
+        text-align:center;
+        border: 0;
+        overflow: hidden; /*  Disable scrollbars */
+        display: block;  /* No floating content on sides */
     }
-</script>
-
-<script id="shader-vs" type="x-shader/x-vertex">
-    attribute vec3 aVertexPosition;
-    attribute vec2 aTextureCoord;
-
-    uniform mat4 uMVMatrix;
-    uniform mat4 uPMatrix;
-
-    varying vec2 vTextureCoord;
-
-
-    void main(void) {
-        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-        vTextureCoord = aTextureCoord;
+    canvas {
+        position:absolute;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        z-index:-1;
     }
-</script>
-
-
-<script type="text/javascript">
-
-    var gl;
-
-    function initGL(canvas) {
-        try {
-            gl = canvas.getContext("experimental-webgl");
-            gl.viewportWidth = canvas.width;
-            gl.viewportHeight = canvas.height;
-        } catch (e) {
-        }
-        if (!gl) {
-            alert("Could not initialise WebGL, sorry :-(");
-        }
+    .overlay {
+        position: absolute;
+        margin-left: 89%;
+        float: right;
+        width: 10%;
+        background-color: rgba(0,0,0,0.65);
     }
+</style>
+<script src="resources/jquery-1.7.1.min.js"></script>
+<script src="resources/webgl-utils.js"></script>
+<!--<script src="helpers/render.js"></script>-->
+<script src="helpers/helpers.js"></script>
+<script src="helpers/objectHelpers.js"></script>
+<script src="helpers/animation.js"></script>
+<script src="helpers/keys.js"></script>
+<script src="helpers/references.js"></script>
+    
+<script src="utils/matrix.js"></script>   
 
+<script src="objects/Skybox.js"></script>
+<script src="objects/Terrain.js"></script>
+<script src="objects/Sherman.js"></script>
+<script src="objects/Hetzer.js"></script>
+<script src="objects/KVTwo.js"></script>
+<script src="objects/ATEight.js"></script>
+<script src="objects/TEighteen.js"></script>
+<script src="objects/ELC.js"></script>
+<script src="objects/BatChatillion.js"></script>
 
-    function getShader(gl, id) {
-        var shaderScript = document.getElementById(id);
-        if (!shaderScript) {
-            return null;
-        }
+<script src="objects/ShermanTurret.js"></script>
+<script src="objects/KVTwoTurret.js"></script>
+<script src="objects/ELCTurret.js"></script>
+<script src="objects/BatChatillionTurret.js"></script>
 
-        var str = "";
-        var k = shaderScript.firstChild;
-        while (k) {
-            if (k.nodeType == 3) {
-                str += k.textContent;
-            }
-            k = k.nextSibling;
-        }
+<script src="objects/Barrel.js"></script>
+<script src="objects/Hangar.js"></script>
+    
+<script>
+"use strict";
 
-        var shader;
-        if (shaderScript.type == "x-shader/x-fragment") {
-            shader = gl.createShader(gl.FRAGMENT_SHADER);
-        } else if (shaderScript.type == "x-shader/x-vertex") {
-            shader = gl.createShader(gl.VERTEX_SHADER);
-        } else {
-            return null;
-        }
+$(function(){
+    main();
+});
 
-        gl.shaderSource(shader, str);
-        gl.compileShader(shader);
+var helpers = new Helpers();
+var cameraZ = 30;
+var cameraHeight = 8;
+var cameraAngleRadians = degToRad(180);
 
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            alert(gl.getShaderInfoLog(shader));
-            return null;
-        }
+var skybox = new Skybox(0,0,0);
+var objects = [
+    new Terrain(0,0,0),
 
-        return shader;
+    new Sherman(0, 0, 0),
+    new Hetzer(15,0,-15),
+    new KVTwo(-15,0,15),
+    new ATEight(15, 0, 0),
+    new TEighteen(-15, 0, 0),
+    new ELC(0,0,15),
+    new BatChatillion(0,0,-15),
+
+    new Barrel(0,0,300),
+    new Hangar(300,0,0),
+];
+var children = [
+    new ShermanTurret(objects[SHERMAN].position[X],1,objects[SHERMAN].position[Z]),
+    new KVTwoTurret(objects[KVTWO].position[X],objects[KVTWO].position[Y],objects[KVTWO].position[Z]),
+    new ELCTurret(objects[ELCAMX].position[X],objects[ELCAMX].position[Y],objects[ELCAMX].position[Z]),
+    new BatChatillionTurret(objects[BATCHAT].position[X],objects[BATCHAT].position[Y],objects[BATCHAT].position[Z]),
+];
+
+function main() {
+    // Get A WebGL context
+    var canvas = document.getElementById("canvas");
+    
+    // make the canvas fullscreen
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.onresize = function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    
+    var gl = getWebGLContext(canvas);
+    if (!gl) {
+    return;
     }
 
+    gl.enable(gl.CULL_FACE);
+    gl.enable(gl.DEPTH_TEST);
 
-    var shaderProgram;
+    // setup GLSL program
+    var program = createProgramFromScripts(gl, ["3d-vertex-shader", "3d-fragment-shader"]);
+    gl.useProgram(program);
 
-    function initShaders() {
-        var fragmentShader = getShader(gl, "shader-fs");
-        var vertexShader = getShader(gl, "shader-vs");
+    // look up where the vertex data needs to go.
+    var positionLocation = gl.getAttribLocation(program, "a_position");
+    var colorLocation = gl.getAttribLocation(program, "a_color");
 
-        shaderProgram = gl.createProgram();
-        gl.attachShader(shaderProgram, vertexShader);
-        gl.attachShader(shaderProgram, fragmentShader);
-        gl.linkProgram(shaderProgram);
-
-        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            alert("Could not initialise shaders");
-        }
-
-        gl.useProgram(shaderProgram);
-
-        shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-        gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-        shaderProgram.textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
-        gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
-
-        shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-        shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
-        shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+    // lookup uniforms
+    var matrixLocation = gl.getUniformLocation(program, "u_matrix");
+    
+    function initScene()
+    { 
+        // Set Geometry and colors
+        skybox.setGeometry(gl);
+        skybox.setColors(gl);
+        objects.forEach(function(object)
+        {
+            object.setGeometry(gl);
+            object.setColors(gl);
+        });
+        children.forEach(function(childObject)
+        {
+            childObject.setGeometry(gl);
+            childObject.setColors(gl);
+        });
     }
 
-    var mvMatrix = mat4.create();
-    var mvMatrixStack = [];
-    var pMatrix = mat4.create();
+    var fieldOfViewRadians = degToRad(60);
+    
 
-    function mvPushMatrix() {
-        var copy = mat4.create();
-        mat4.set(mvMatrix, copy);
-        mvMatrixStack.push(copy);
-    }
+    initScene();
+    
+    document.onkeydown = handleKeyDown;
+    document.onkeyup = handleKeyUp;
 
-    function mvPopMatrix() {
-        if (mvMatrixStack.length == 0) {
-            throw "Invalid popMatrix!";
-        }
-        mvMatrix = mvMatrixStack.pop();
-    }
-
-
-    function setMatrixUniforms() {
-        gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-        gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
-    }
-
-
-    function degToRad(degrees) {
-        return degrees * Math.PI / 180;
-    }
-
-    function radToDeg(radians) {
-        return (radians / Math.PI) * 180;
-    }
-
-    var test = new sherman(0, 0, 0, "this");
-
-    // this is to be a container for all of the objects contained within the scene
-    var objects = [
-        new skybox(0.0, 0.0, 0, "assets/glass.gif"),
-        new terrain(0.0, 0.0, -5.0, "assets/grassTexture.jpeg"), 
-        new sherman(0.0, 0.0, -5.0, "assets/camoTexture.png"),
-        new tank2(0.0, 3.0, -9.0, "assets/camoTexture.png")
-        // new tank3(3.0, 0.0, -5.0, "assets/camoTexture.png"),
-        // new tank4(-3.0, 0.0, 5.0, "assets/camoTexture.png"),
-        // new tank5(-5.0, 0.0, 9.0, "assets/camoTexture.png"),
-        // new tank6(5.0, 0.0, 11.0, "assets/camoTexture.png"),
-        // new tank7(0.0, 0.0, -5.0, "assets/camoTexture.png")
-    ];
-
-    function initBuffers() 
-    {
-        objects[SKYBOX].init();
-        objects[TERRAIN].init(30, 30);
-        objects[SHERMAN].init();
-        objects[TANK2].init();
-        // objects[TANK3].init();
-        // objects[TANK4].init();
-        // objects[TANK5].init();
-        // objects[TANK6].init();
-        // objects[TANK7].init();
-    }
-
-    function initTextures() 
-    {
-        initTexture(objects[SKYBOX]);
-        initTexture(objects[TERRAIN]);
-        initTexture(objects[SHERMAN]);
-        initTexture(objects[TANK2]);
-        // initTexture(objects[TANK3]);
-        // initTexture(objects[TANK4]);
-        // initTexture(objects[TANK5]);
-        // initTexture(objects[TANK6]);
-        // initTexture(objects[TANK7]);
-    }
-
-    function drawScene() 
-    {
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
-
-        draw(objects[SKYBOX]);
-        gl.clear(gl.DEPTH_BUFFER_BIT); // send the skybox to the background
-
-        draw(objects[TERRAIN]);
-        draw(objects[SHERMAN]);
-        draw(objects[TANK2]);
-        // draw(objects[TANK3]);
-        // draw(objects[TANK4]);
-        // draw(objects[TANK5]);
-        // draw(objects[TANK6]);
-        // draw(objects[TANK7]);
-    }
-
+    tick();
+    
     function tick() 
     {
         requestAnimFrame(tick);
         handleKeys();
-        drawScene();
-        updateHUD();
+        drawScene(objects, children);
     }
+    
+    // Draw the scene.
+    function drawScene(objects, children) 
+    {
+        // Clear the canvas AND the depth buffer.
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // Compute the projection matrix
+        var aspect = canvas.clientWidth / canvas.clientHeight;
+        var projectionMatrix =
+            makePerspective(fieldOfViewRadians, aspect, 1, 2000);
+
+        // Compute the position of the first F
+        // camera always rotates around the origin F.position = 0, 0, 0
+
+        // Use matrix math to compute a position on the circle.
+        var cameraMatrix = makeTranslation(0, cameraHeight, cameraZ);
+        cameraMatrix = matrixMultiply(
+            cameraMatrix, makeYRotation(cameraAngleRadians));
 
 
+        // Get the camera's postion from the matrix we computed
+        var cameraPosition = [
+            cameraMatrix[12],
+            cameraMatrix[13],
+            cameraMatrix[14]];
 
-    function webGLStart() {
-        var canvas = document.getElementById("canvas");
+        var up = [0, 1, 0];
 
-        // make the canvas fullscreen
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // Compute the camera's matrix using look at.
+        var cameraMatrix = makeLookAt(cameraPosition, objects[FOCUS].position, up);
 
-        window.onresize = function() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            //renderer.reshape(canvas.width, canvas.height);
-        }
+        // Make a view matrix from the camera matrix.
+        var viewMatrix = makeInverse(cameraMatrix);
 
-        initGL(canvas);
-        initShaders();
-        initBuffers();
-                console.log(objects[SHERMAN].pos);
+        // center the skybox around the camera and send the walls of the box to the background
+        skybox.position = cameraPosition;
+        draw(skybox, cameraMatrix, viewMatrix, projectionMatrix);
+        gl.clear(gl.DEPTH_BUFFER_BIT); // send the skybox to the background
 
-        initTextures();
-
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.enable(gl.DEPTH_TEST);
-
-        console.log(objects[SHERMAN].pos);
-        changeFocus(SHERMAN);
-        console.log(objects[SHERMAN].pos);
-
-        tick();
-
-        document.onkeydown = handleKeyDown;
-        document.onkeyup = handleKeyUp;
+        objects.forEach(function(object)
+        {
+            draw(object, cameraMatrix, viewMatrix, projectionMatrix);
+        });
+        children.forEach(function(childObject)
+        {
+            draw(childObject, cameraMatrix, viewMatrix, projectionMatrix);
+        });
     }
+    
+    function draw(object, cameraMatrix, viewMatrix, projectionMatrix)
+    {    
+        // setup the translation of the object
+        var translationMatrix = makeTranslation(object.position[X], object.position[Y], object.position[Z]);
+
+        var rotationYMatrix = makeYRotation(object.rotation[Y]);
+        
+        // Multiply the matrices.
+        var matrix = rotationYMatrix;
+        matrix = matrixMultiply(matrix, translationMatrix);
+        matrix = matrixMultiply(matrix, viewMatrix);
+        matrix = matrixMultiply(matrix, projectionMatrix);
+
+        // Set the matrix.
+        gl.uniformMatrix4fv(matrixLocation, false, matrix);
+
+        // Create a buffer.
+        gl.bindBuffer(gl.ARRAY_BUFFER, object.vbo);
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, object.vbo.itemSize, gl.FLOAT, false, 0, 0);
+
+        // Create a buffer for colors.
+        gl.bindBuffer(gl.ARRAY_BUFFER, object.cbo);
+        gl.enableVertexAttribArray(colorLocation);
+
+        // We'll supply RGB as bytes.
+        gl.vertexAttribPointer(colorLocation, object.cbo.itemSize, gl.UNSIGNED_BYTE, true, 0, 0); 
+
+        // Draw the geometry.
+        gl.drawArrays(gl.TRIANGLES, 0, object.vbo.numItems);
+    }
+}
 
 </script>
-
-
-</head>
-<body onload="webGLStart();">
-    <div id="picture">
-        <canvas id="canvas" style="border: none;"></canvas>
-        <div class="overlay">
-            Current Tank <br/>
-            <span id="focus"></span> <br/>
-            <br/>
-
-            Rotation <br/>
-            X: <span id="roll">0.0</span> <br/>
-            Y: <span id="yaw">0.0</span> <br/> <br/>
-            <br/>
-
-            Position <br/>
-            X:<span id="x"></span> <br/>
-            Y:<span id="y"></span> <br/>
-            Z:<span id="z"></span> <br/>
-            <br/>
-
-            Terrain Position <br/>
-            X:<span id="tx"></span> <br/>
-            Y:<span id="ty"></span> <br/>
-            Z:<span id="tz"></span> <br/>
-        </div>
-    </div>
-
+   
     
+    
+    
+<!-- vertex shader -->
+<script id="3d-vertex-shader" type="x-shader/x-vertex">
+attribute vec4 a_position;
+attribute vec4 a_color;
+
+uniform mat4 u_matrix;
+
+varying vec4 v_color;
+
+void main() {
+  // Multiply the position by the matrix.
+  gl_Position = u_matrix * a_position;
+
+  // Pass the color to the fragment shader.
+  v_color = a_color;
+}
+</script>
+    
+<!-- fragment shader -->
+<script id="3d-fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+// Passed in from the vertex shader.
+varying vec4 v_color;
+
+void main() {
+   gl_FragColor = v_color;
+}
+</script>
+    
+    
+</head>
+    
+<body>
+    <canvas id="canvas" width="400" height="300"></canvas>
+        <div class="overlay">
+            <!--
+            <div id="cameraAngle"></div>
+            <div id="cameraHeight"></div>
+            -->
+        </div>
 </body>
 
 </html>
+
+
