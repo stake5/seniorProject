@@ -1,9 +1,10 @@
-function BatChatillion(x, y, z)
+function BatChatillion()
 {
-    this.position = [x, y, z];
+    this.position = [0, 0, 0];
     this.direction = [0, 0, 0]; 
     this.distance = 0.0;
     this.rotation = [0, 0, 0];
+    this.speed = .2;
 }
 
 // Fill the buffer with the values that define BatChatillion.

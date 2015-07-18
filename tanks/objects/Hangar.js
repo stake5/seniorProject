@@ -1,6 +1,6 @@
-function Hangar(x, y, z)
+function Hangar()
 {
-    this.position = [x, y, z];
+    this.position = [0, 0, 0];
     this.direction = [0, 0, 0]; 
     this.distance = 0.0;
     this.rotation = [0, 0, 0];

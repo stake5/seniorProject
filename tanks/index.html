@@ -31,7 +31,6 @@
 </style>
 <script src="resources/jquery-1.7.1.min.js"></script>
 <script src="resources/webgl-utils.js"></script>
-<!--<script src="helpers/render.js"></script>-->
 <script src="helpers/helpers.js"></script>
 <script src="helpers/objectHelpers.js"></script>
 <script src="helpers/animation.js"></script>
@@ -72,24 +71,37 @@ var cameraAngleRadians = degToRad(180);
 
 var skybox = new Skybox(0,0,0);
 var objects = [
-    new Terrain(0,0,0),
+    new Terrain(),
 
-    new Sherman(0, 0, 0),
-    new Hetzer(15,0,-15),
-    new KVTwo(-15,0,15),
-    new ATEight(15, 0, 0),
-    new TEighteen(-15, 0, 0),
-    new ELC(0,0,15),
-    new BatChatillion(0,0,-15),
+    new Sherman(),
+    new Hetzer(),
+    new KVTwo(),
+    new ATEight(),
+    new TEighteen(),
+    new ELC(),
+    new BatChatillion(),
 
-    new Barrel(0,0,300),
-    new Hangar(300,0,0),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel()
 ];
 var children = [
-    new ShermanTurret(objects[SHERMAN].position[X],1,objects[SHERMAN].position[Z]),
-    new KVTwoTurret(objects[KVTWO].position[X],objects[KVTWO].position[Y],objects[KVTWO].position[Z]),
-    new ELCTurret(objects[ELCAMX].position[X],objects[ELCAMX].position[Y],objects[ELCAMX].position[Z]),
-    new BatChatillionTurret(objects[BATCHAT].position[X],objects[BATCHAT].position[Y],objects[BATCHAT].position[Z]),
+    new ShermanTurret(),
+    new KVTwoTurret(),
+    new ELCTurret(),
+    new BatChatillionTurret()
 ];
 
 function main() {
@@ -149,6 +161,7 @@ function main() {
     document.onkeydown = handleKeyDown;
     document.onkeyup = handleKeyUp;
 
+    setOrigionalPositionsAndRotation();
     tick();
     
     function tick() 

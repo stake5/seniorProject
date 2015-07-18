@@ -29,9 +29,9 @@ function handleKeys() {
     
     // object movement
     if (currentlyPressedKeys[KEY_W])
-        moveTank(-1);
+        moveTank(-objects[FOCUS].speed);
     if (currentlyPressedKeys[KEY_S])
-        moveTank(1);
+        moveTank(objects[FOCUS].speed);
     
     // focus changes
     if (currentlyPressedKeys[KEY_1])
@@ -174,9 +174,21 @@ function animationRules()
     // apply restrictions to camera angle
     cameraAngle = radToDeg(cameraAngleRadians);
     if (cameraAngle > 360)
+    {
         cameraAngle -= 360;
+        // if (FOCUSCHILD != -1)
+        // {
+        //     children[FOCUSCHILD].rotation[Y] -= 360;
+        // } TODO: implement or deprecate
+    }
     if (cameraAngle < 0)
+    {
         cameraAngle += 360;
+        // if (FOCUSCHILD != -1)
+        // {
+        //     children[FOCUSCHILD].rotation[Y] += 360;
+        // }
+    }
     cameraAngleRadians = degToRad(cameraAngle);
     
     // apply restriction to object rotation
