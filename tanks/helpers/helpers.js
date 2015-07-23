@@ -12,6 +12,44 @@ Helpers.prototype.randomColors = function(length)
     return temp;
 }
 
+Helpers.prototype.black = function(length)
+{
+    var temp = new Array();
+    
+    for (var i = 0; i < length; i++)
+    {
+        temp.push(0);
+    }
+    
+    return temp;
+}
+
+Helpers.prototype.flatten = function(array)
+{
+	var result = new Array();
+	var temp;
+	var slopeX;
+	var slopeZ;
+
+	for (var i = 0; i < array.length; i++) {
+		temp = i % 3;
+		switch(temp) {
+			case 0:
+	  			slopeX = (light[Y]-array[i + 1]) / (light[X]-array[i]);
+  	  			result.push(light[X] - (light[Y] / slopeX));
+	  			break;
+			case 1:
+				result.push(0)
+				break;
+			case 2:
+	  			slopeZ = (light[Y]-array[i - 1]) / (light[Z]-array[i]);
+				result.push(light[Z] - (light[Y] / slopeZ));
+				break;
+		}
+	};
+	return result;
+}
+
 function radToDeg(r) {
 return r * 180 / Math.PI;
 }
@@ -47,7 +85,7 @@ function setOrigionalPositionsAndRotation()
 {
 	objects[SHERMAN].position = [0,0,0];
 	objects[SHERMAN].rotation = [0,0,0];
-	children[SHERMANTURRET].position = [0,1,0];
+	children[SHERMANTURRET].position = [0,0,0];
 	children[SHERMANTURRET].rotation = [0,0,0];	
 
 	objects[HETZER].position = [0,0,50];

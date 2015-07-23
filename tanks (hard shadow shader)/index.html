@@ -1,0 +1,275 @@
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tanks!</title>
+<style>
+    body {
+        margin: 0px auto;
+        background-color:rgb(0,0,0);
+        color:rgb(255,255,255);
+        text-align:center;
+        border: 0;
+        overflow: hidden; /*  Disable scrollbars */
+        display: block;  /* No floating content on sides */
+    }
+    canvas {
+        position:absolute;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        z-index:-1;
+    }
+    .overlay {
+        position: absolute;
+        margin-left: 89%;
+        float: right;
+        width: 10%;
+        background-color: rgba(0,0,0,0.65);
+    }
+</style>
+<script src="resources/webgl-utils.js"></script>
+
+<script src="helpers/helpers.js"></script>
+<script src="helpers/scene.js"></script>
+<script src="helpers/render.js"></script>
+<script src="helpers/objectHelpers.js"></script>
+<script src="helpers/animation.js"></script>
+<script src="helpers/keys.js"></script>
+<script src="helpers/references.js"></script>
+    
+<script src="utils/matrix.js"></script>   
+
+<script src="objects/Skybox.js"></script>
+<script src="objects/Terrain.js"></script>
+<script src="objects/Sherman.js"></script>
+<script src="objects/Hetzer.js"></script>
+<script src="objects/KVTwo.js"></script>
+<script src="objects/ATEight.js"></script>
+<script src="objects/TEighteen.js"></script>
+<script src="objects/ELC.js"></script>
+<script src="objects/BatChatillion.js"></script>
+
+<script src="objects/ShermanTurret.js"></script>
+<script src="objects/KVTwoTurret.js"></script>
+<script src="objects/ELCTurret.js"></script>
+<script src="objects/BatChatillionTurret.js"></script>
+
+<script src="objects/Barrel.js"></script>
+<script src="objects/Hangar.js"></script>
+    
+<script>
+"use strict";
+
+// globals
+var gl;
+var program;
+
+// program (shaders) globals
+var positionLocation;
+var colorLocation;
+var matrixLocation;
+var fieldOfViewRadians;
+var shadow;
+var cHeight;
+
+// globals draw variables
+var aspect;
+var projectionMatrix;
+var cameraMatrix;
+var cameraPosition;
+var up;
+var cameraMatrix;
+var viewMatrix;
+var lightingDirection;
+var lightingD = new Array();
+
+// initializing helpers
+var helpers = new Helpers();
+
+// camera globals
+var cameraZ = 30;
+var cameraHeight = 8;
+var cameraAngleRadians = degToRad(180);
+
+// objects
+var skybox = new Skybox(0,0,0);
+var objects = [
+    new Terrain(),
+
+    new Sherman(),
+    new Hetzer(),
+    new KVTwo(),
+    new ATEight(),
+    new TEighteen(),
+    new ELC(),
+    new BatChatillion(),
+
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel()
+];
+var children = [
+    new ShermanTurret(),
+    new KVTwoTurret(),
+    new ELCTurret(),
+    new BatChatillionTurret()
+];
+
+function webGLStart() 
+{
+    var canvas = document.getElementById("canvas");
+
+    // make the canvas fullscreen
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.onresize = function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        //renderer.reshape(canvas.width, canvas.height);
+    }
+
+    initGL(canvas);
+    
+    // setup GLSL program
+    program = createProgramFromScripts(gl, ["3d-vertex-shader", "3d-fragment-shader"]);
+    gl.useProgram(program);
+
+    // look up where the vertex data needs to go.
+    positionLocation = gl.getAttribLocation(program, "a_position");
+    colorLocation = gl.getAttribLocation(program, "a_color");
+    lightingDirection = gl.getUniformLocation(program, "u_lightingDirection");
+    cHeight = gl.getUniformLocation(program, "u_cameraHeight");
+
+    // lookup uniforms
+    matrixLocation = gl.getUniformLocation(program, "u_matrix");
+
+    // lookup boolean
+    shadow = gl.getUniformLocation(program, "uShadow");
+
+    fieldOfViewRadians = degToRad(60);
+
+    initScene();
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.CULL_FACE);
+    gl.enable(gl.DEPTH_TEST);
+
+    setOrigionalPositionsAndRotation();
+    tick();
+
+    document.onkeydown = handleKeyDown;
+    document.onkeyup = handleKeyUp;
+}
+
+function initGL(canvas)
+{
+    gl = getWebGLContext(canvas);
+    if (!gl) {
+    alert("I am an alert box!");
+    }
+
+}
+
+function tick() 
+{
+    requestAnimFrame(tick);
+    handleKeys();
+    drawScene(objects, children);
+}
+
+</script>
+    
+<!-- vertex shader -->
+<script id="3d-vertex-shader" type="x-shader/x-vertex">
+attribute vec4 a_position;
+attribute vec4 a_color;
+
+uniform vec3 u_lightingDirection;
+
+uniform mat4 u_matrix;
+
+uniform float u_cameraHeight;
+
+uniform bool uShadow; // flag for if the object is a shadow
+
+varying vec4 v_color;
+
+
+void main() {
+  if (!uShadow) {
+      // Multiply the position by the matrix.
+      gl_Position = u_matrix * a_position;
+
+      // Pass the color to the fragment shader.
+      v_color = a_color;
+  }
+  else {
+      // 
+      vec4 v = u_matrix * a_position;
+      vec3 light = u_lightingDirection;
+
+      // Calculate slope.
+      float slopeX = (light.y - v.y) / (light.x - v.x);
+      float slopeZ = (light.y - v.y) / (light.z - v.z); 
+     
+      // Flatten by making all the y components the same.
+      v.y = -.2; // y needs to be just above terrain
+      v.x = light.x - (light.y / slopeX);
+      v.z = light.z - (light.y / slopeZ);
+
+        // // Projected planar shadow matrix.
+        // mat4 sMatrix = mat4 ( light.y,  0.0,  0.0,  0.0, 
+        //                     -light.x,  0.0, -light.z, -1.0,
+        //                     0.0,  0.0,  light.y,  0.0,
+        //                     0.0,  0.0,  0.0,  light.y);
+     
+      gl_Position = a_position * v;
+      v_color = vec4(0.0, 0.0, 0.0, 1.0);
+  }
+  
+}
+
+</script>
+    
+<!-- fragment shader -->
+<script id="3d-fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+// Passed in from the vertex shader.
+varying vec4 v_color;
+
+void main() {
+   gl_FragColor = v_color;
+}
+</script>
+    
+    
+</head>
+    
+<body onload="webGLStart();">
+    <canvas id="canvas" width="400" height="300"></canvas>
+        <div class="overlay">
+            <!--
+            <div id="cameraAngle"></div>
+            <div id="cameraHeight"></div>
+            -->
+        </div>
+</body>
+
+</html>
+
+

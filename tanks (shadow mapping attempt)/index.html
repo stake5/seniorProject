@@ -1,0 +1,305 @@
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tanks!</title>
+<style>
+    body {
+        margin: 0px auto;
+        background-color:rgb(0,0,0);
+        color:rgb(255,255,255);
+        text-align:center;
+        border: 0;
+        overflow: hidden; /*  Disable scrollbars */
+        display: block;  /* No floating content on sides */
+    }
+    canvas {
+        position:absolute;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        z-index:-1;
+    }
+    .overlay {
+        position: absolute;
+        margin-left: 89%;
+        float: right;
+        width: 10%;
+        background-color: rgba(0,0,0,0.65);
+    }
+</style>
+<script src="resources/webgl-utils.js"></script>
+
+<script src="helpers/helpers.js"></script>
+<script src="helpers/scene.js"></script>
+<script src="helpers/render.js"></script>
+<script src="helpers/objectHelpers.js"></script>
+<script src="helpers/animation.js"></script>
+<script src="helpers/keys.js"></script>
+<script src="helpers/references.js"></script>
+    
+<script src="utils/matrix.js"></script>   
+
+<script src="objects/Skybox.js"></script>
+<script src="objects/Terrain.js"></script>
+<script src="objects/Sherman.js"></script>
+<script src="objects/Hetzer.js"></script>
+<script src="objects/KVTwo.js"></script>
+<script src="objects/ATEight.js"></script>
+<script src="objects/TEighteen.js"></script>
+<script src="objects/ELC.js"></script>
+<script src="objects/BatChatillion.js"></script>
+
+<script src="objects/ShermanTurret.js"></script>
+<script src="objects/KVTwoTurret.js"></script>
+<script src="objects/ELCTurret.js"></script>
+<script src="objects/BatChatillionTurret.js"></script>
+
+<script src="objects/Barrel.js"></script>
+<script src="objects/Hangar.js"></script>
+    
+<script>
+"use strict";
+
+// globals
+var gl;
+var shaderProgram;
+
+// program (shaders) globals
+var positionLocation;
+var colorLocation;
+var matrixLocation;
+var normalLocation;
+var samplerUniform;
+var mvMatrix;
+var fieldOfViewRadians;
+
+// globals draw variables
+var aspect;
+var projectionMatrix;
+var cameraMatrix;
+var cameraPosition;
+var up;
+var cameraMatrix;
+var viewMatrix;
+
+// initializing helpers
+var helpers = new Helpers();
+
+// camera globals
+var cameraZ = 30;
+var cameraHeight = 8;
+var cameraAngleRadians = degToRad(180);
+
+// objects
+var skybox = new Skybox(0,0,0);
+var objects = [
+    new Terrain(),
+
+    new Sherman(),
+    new Hetzer(),
+    new KVTwo(),
+    new ATEight(),
+    new TEighteen(),
+    new ELC(),
+    new BatChatillion(),
+
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+    new Hangar(),
+
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel(),
+    new Barrel()
+];
+var children = [
+    new ShermanTurret(),
+    new KVTwoTurret(),
+    new ELCTurret(),
+    new BatChatillionTurret()
+];
+
+function webGLStart() 
+{
+    var canvas = document.getElementById("canvas");
+
+    // make the canvas fullscreen
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.onresize = function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        //renderer.reshape(canvas.width, canvas.height);
+    }
+    
+    initGL(canvas);
+    initShaders();
+
+    fieldOfViewRadians = degToRad(60);
+
+    initScene();
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.CULL_FACE);
+    gl.enable(gl.DEPTH_TEST);
+
+    setOrigionalPositionsAndRotation();
+    tick();
+    // drawScene(objects, children);
+
+    document.onkeydown = handleKeyDown;
+    document.onkeyup = handleKeyUp;
+}
+
+function initGL(canvas)
+{
+    gl = getWebGLContext(canvas);
+    if (!gl) {
+        alert("Your browser does not support WebGL! sorry :(");
+    }
+
+}
+
+function getShader(gl, id) {
+    var shaderScript = document.getElementById(id);
+    if (!shaderScript) {
+        return null;
+    }
+
+    var str = "";
+    var k = shaderScript.firstChild;
+    while (k) {
+        if (k.nodeType == 3) {
+            str += k.textContent;
+        }
+        k = k.nextSibling;
+    }
+
+    var shader;
+    if (shaderScript.type == "x-shader/x-fragment") {
+        shader = gl.createShader(gl.FRAGMENT_SHADER);
+    } else if (shaderScript.type == "x-shader/x-vertex") {
+        shader = gl.createShader(gl.VERTEX_SHADER);
+    } else {
+        return null;
+    }
+
+    gl.shaderSource(shader, str);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        alert(gl.getShaderInfoLog(shader));
+        return null;
+    }
+
+    return shader;
+}
+
+function initShaders() {
+    var fragmentShader = getShader(gl, "shader-fs");
+    var vertexShader = getShader(gl, "shader-vs");
+
+    shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        alert("Could not initialise shaders");
+    }
+
+    gl.useProgram(shaderProgram);
+
+    shaderProgram.positionLocation = gl.getAttribLocation(shaderProgram, "a_position");
+    shaderProgram.colorLocation = gl.getAttribLocation(shaderProgram, "a_color");
+    // gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+    shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
+    // // gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
+
+    shaderProgram.matrixLocation = gl.getUniformLocation(shaderProgram, "u_matrix");
+    // // shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+    // shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
+    // // shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+    // // shaderProgram.useLightingUniform = gl.getUniformLocation(shaderProgram, "uUseLighting");
+    // shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
+    // shaderProgram.lightingDirectionUniform = gl.getUniformLocation(shaderProgram, "uLightingDirection");
+    // shaderProgram.directionalColorUniform = gl.getUniformLocation(shaderProgram, "uDirectionalColor");
+}
+
+function tick() 
+{
+    requestAnimFrame(tick);
+    handleKeys();
+    drawScene(objects, children);
+}
+
+</script>
+    
+<!-- vertex shader -->
+<script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec4 a_position;
+    attribute vec4 a_color;
+
+    attribute vec3 aVertexNormal;
+
+    uniform mat4 u_matrix;
+    uniform mat3 uNMatrix; // normal matrix
+
+    uniform vec3 uAmbientColor;
+
+    uniform vec3 uLightingDirection;
+    uniform vec3 uDirectionalColor;
+
+    varying vec4 v_color;
+    varying vec3 vLightWeighting;
+
+    void main(void) {
+        // send the positions to opengl 
+        gl_Position = u_matrix * a_position;
+
+        vec3 transformedNormal = uNMatrix * aVertexNormal;
+        float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
+        vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
+
+        v_color = a_color;
+    }
+</script>
+    
+<!-- fragment shader -->
+<script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying vec3 vLightWeighting;
+    varying vec4 v_color;
+
+    void main(void) {
+        // gl_FragColor = vec4(v_color.rgb * vLightWeighting, v_color.a);
+        gl_FragColor = v_color;
+    }
+</script>
+    
+</head>
+    
+<body onload="webGLStart();">
+    <canvas id="canvas"></canvas>
+        <div class="overlay">
+            <!--
+            <div id="cameraAngle"></div>
+            <div id="cameraHeight"></div>
+            -->
+        </div>
+</body>
+
+</html>
+
+

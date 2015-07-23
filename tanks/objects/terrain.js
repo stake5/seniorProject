@@ -1,5 +1,6 @@
 function Terrain()
 {
+    this.name = "Terrain";
     this.position = [0, 0, 0];
     this.direction = [0, 0, 0]; 
     this.distance = 0.0;
@@ -44,51 +45,21 @@ Terrain.prototype.setColors = function()
     }
 
     this.colors = new Uint8Array(colors);
-//    this.colors = new Uint8Array([
-//          // left column front
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//
-//            // left column front
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//            // left column front
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//            // left column front
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//            // left column front
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//            // left column front
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120,
-//        200,  70, 120
-//        ]);
+
+    gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.STATIC_DRAW);
+    this.cbo.itemSize = 3;
+    this.cbo.numItems = this.colors.length / this.cbo.itemSize;
+}
+
+Terrain.prototype.changeColors = function(array) 
+{
+    this.cbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo);
+    // this.colors = new Uint8Array(helpers.randomColors(this.vertices.length));
+
+
+    this.colors = new Uint8Array(array);
+
     gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.STATIC_DRAW);
     this.cbo.itemSize = 3;
     this.cbo.numItems = this.colors.length / this.cbo.itemSize;

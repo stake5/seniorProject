@@ -1,10 +1,12 @@
 function BatChatillion()
 {
+    this.name = "BatChatillion";
     this.position = [0, 0, 0];
     this.direction = [0, 0, 0]; 
     this.distance = 0.0;
     this.rotation = [0, 0, 0];
     this.speed = .2;
+    this.shadow = {};
 }
 
 // Fill the buffer with the values that define BatChatillion.
@@ -893,4 +895,12 @@ BatChatillion.prototype.setColors = function()
     gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.STATIC_DRAW);
     this.cbo.itemSize = 3;
     this.cbo.numItems = this.colors.length / this.cbo.itemSize;
+
+    this.shadow.cbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.shadow.cbo);
+    this.shadow.colors = new Uint8Array(helpers.black(this.vertices.length));
+    
+    gl.bufferData(gl.ARRAY_BUFFER, this.shadow.colors, gl.STATIC_DRAW);
+    this.shadow.cbo.itemSize = 3;
+    this.shadow.cbo.numItems = this.shadow.colors.length / this.shadow.cbo.itemSize;
 }

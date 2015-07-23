@@ -127,6 +127,15 @@ function makeScale(sx, sy, sz) {
   ];
 }
 
+function makeShadow(sx, sy, sz) {
+  return [
+    sy, 0,  0,  0,
+    -sx, 0,  -sz,  0,
+    0,  0, sy,  0,
+    0,  0,  0,  sy,
+  ];
+}
+
 function matrixMultiply(a, b) {
   var a00 = a[0*4+0];
   var a01 = a[0*4+1];
